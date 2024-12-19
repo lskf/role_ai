@@ -6,6 +6,7 @@ import (
 	"github.com/leor-w/kid/guard/store"
 	"github.com/leor-w/kid/plugin/captcha"
 	"github.com/leor-w/kid/plugin/qiniu"
+	"github.com/leor-w/kid/plugin/smscode"
 	"role_ai/infrastructure/middleware"
 	"role_ai/routers"
 
@@ -43,6 +44,7 @@ func Run() {
 	appScope.Provide(new(middleware.Authorize))
 	appScope.Provide(new(middleware.RequestSign))
 	appScope.Provide(new(qiniu.Qiniu))
+	appScope.Provide(new(smscode.Ali))
 
 	handler.InitController(appScope)
 	services.InitService(appScope)

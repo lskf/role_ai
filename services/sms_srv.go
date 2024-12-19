@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/leor-w/kid/errors"
+	"github.com/leor-w/kid/plugin/smscode"
 	"role_ai/infrastructure/ecode"
 	"role_ai/infrastructure/tools"
 	"role_ai/models"
@@ -14,6 +15,7 @@ import (
 
 type SmsService struct {
 	smsRepo repos.ISmsRepository `inject:""`
+	sms     *smscode.Ali         `inject:""`
 }
 
 func (srv *SmsService) Provide(_ context.Context) interface{} {
@@ -27,8 +29,6 @@ func (srv *SmsService) Provide(_ context.Context) interface{} {
 // @return error
 func (srv *SmsService) SendCode(phone string) error {
 	code := tools.RandomInt64InRange(0, 999999)
-	//todo dele
-	code = 123456
 	codeStr := strconv.FormatInt(code, 10)
 	//反正频繁操作
 	ok, err := srv.smsRepo.LockKey(phone, 1)
@@ -43,10 +43,10 @@ func (srv *SmsService) SendCode(phone string) error {
 	if err != nil {
 		return errors.New(ecode.DatabaseErr, err)
 	}
-	////发送 todo
-	//if err = srv.sms.SendSMS(phone, codeStr); err != nil {
-	//	return errors.New(ecode.SMSSendErr, err)
-	//}
+	//发送
+	if err = srv.sms.SendSMS(phone, codeStr); err != nil {
+		return errors.New(ecode.SMSSendErr, err)
+	}
 	return nil
 }
 

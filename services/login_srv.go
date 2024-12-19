@@ -43,9 +43,10 @@ func (srv *LoginService) Login(phone string) (*models.User, error) {
 	//获取用户信息
 	var user models.User
 	_ = srv.userRepo.GetOne(&finder.Finder{
-		Model:     new(models.User),
-		Wheres:    where.New().And(where.Eq("phone", phone)),
-		Recipient: &user,
+		Model:          new(models.User),
+		Wheres:         where.New().And(where.Eq("phone", phone)),
+		IgnoreNotFound: true,
+		Recipient:      &user,
 	})
 	//判断用户是否存在
 	if user.Id <= 0 || user.Uid <= 0 {
