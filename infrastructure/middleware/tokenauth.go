@@ -16,6 +16,7 @@ import (
 
 type Authorize struct {
 	adminRepo repos.IAdminRepository `inject:""`
+	userRepo  repos.IUserRepository  `inject:""`
 }
 
 var authorize *Authorize
@@ -72,33 +73,34 @@ func AdminTokenAuth(ctx *kid.Context) {
 	ctx.Next()
 }
 
-//// AppTokenAuth 客户端登录 token 验证
-//func AppTokenAuth(ctx *kid.Context) {
-//	user, err := GetUser(ctx)
-//	if err != nil {
-//		ctx.JSON(200, web.Error(err))
-//		ctx.Abort()
-//		return
-//	}
-//	if user.Type != guard.General {
-//		ctx.JSON(200, web.ErrorWithStatus(ecode.AuthFailedErr))
-//		ctx.Abort()
-//		return
-//	}
-//	var appUser models.User
-//	err = authorize.userRepo.GetOneWithErr(
-//		&repos.QueryWrapper{
-//			Where:     mysql.Wrappers(mysql.NewWhereWrapper("uid", "=", user.Uid)),
-//			Recipient: &appUser,
-//		})
-//	if err != nil {
-//		ctx.JSON(200, web.ErrorWithStatus(ecode.UserNotFoundErr))
-//		ctx.Abort()
-//		return
-//	}
-//	ctx.BindUser(&appUser)
-//	ctx.Next()
-//}
+// AppTokenAuth 客户端登录 token 验证
+func AppTokenAuth(ctx *kid.Context) {
+	user, err := GetUser(ctx)
+	if err != nil {
+		ctx.JSON(200, web.Error(err))
+		ctx.Abort()
+		return
+	}
+	if user.Type != guard.General {
+		ctx.JSON(200, web.ErrorWithStatus(ecode.AuthFailedErr))
+		ctx.Abort()
+		return
+	}
+	var appUser models.User
+	err = authorize.userRepo.GetOne(&finder.Finder{
+		Model:     new(models.User),
+		Wheres:    where.New().And(where.Eq("uid", user.Uid)),
+		Recipient: &appUser,
+	})
+	if err != nil {
+		ctx.JSON(200, web.ErrorWithStatus(ecode.UserNotFoundErr))
+		ctx.Abort()
+		return
+	}
+	ctx.BindUser(&appUser)
+	ctx.Next()
+}
+
 //
 //// AppTokenAuthIgnoreError 客户端登录 token 验证
 //func AppTokenAuthIgnoreError(ctx *kid.Context) {

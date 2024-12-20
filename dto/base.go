@@ -2,6 +2,10 @@ package dto
 
 import "regexp"
 
+var (
+	TimeFormatToDateTime = "2006-01-02 15:04:05"
+)
+
 type CreatorAndUpdaterField struct {
 	CreatorId   int64  `json:"creator_id"`
 	UpdaterId   int64  `json:"updater_id"`
@@ -28,6 +32,14 @@ func ParseCreatedUpdatedAt(created, updated int64) CreatedUpdatedTimeField {
 		CreatedAt: created,
 		UpdatedAt: updated,
 	}
+}
+
+type IdField struct {
+	Id int64 `json:"id" validate:"required"`
+}
+
+type UidField struct {
+	Uid int64 `json:"uid" validate:"required"`
 }
 
 type PageField struct {

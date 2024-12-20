@@ -15,21 +15,17 @@ func InitAppRouter(group *kid.RouterGroup) {
 		login.POST("/password", handler.LoginByPassword) // 密码登录
 	}
 
-	logged := group.Group("", middleware.AdminTokenAuth) // 需要登录的路由
+	logged := group.Group("", middleware.AppTokenAuth) // 需要登录的路由
 	{
 		logout := logged.Group("/logout") // logout 的路由
 		{
 			logout.POST("", handler.Logout) // 退出登录
 		}
 
-		admin := logged.Group("/admin") // app 的路由
+		user := logged.Group("/user")
 		{
-			admin.POST("", handler.CreateAdmin)                  // 创建 admin
-			admin.GET("", handler.GetAdminList)                  // 获取 admin 列表
-			admin.GET("/:uid", handler.GetAdminDetail)           // 获取 admin 详情
-			admin.PUT("/:uid", handler.UpdateAdmin)              // 更新 admin
-			admin.PUT("/updatePwd/:uid", handler.UpdateAdminPwd) // 更新 admin 密码
-			admin.DELETE("/:uid", handler.DeleteAdmin)           // 删除 admin
+			user.GET("", handler.GetUserDetail) //获取用户详情
+			user.PUT("", handler.UpdateUser)    //更新用户信息
 		}
 
 		upload := logged.Group("/upload")

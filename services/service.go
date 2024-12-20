@@ -10,7 +10,7 @@ func InitService(appScope *injector.Scope) {
 	appScope.Provide(new(AdminService))
 	appScope.Provide(new(UploadService))
 	appScope.Provide(new(SmsService))
-
+	appScope.Provide(new(UserService))
 }
 
 // GetFieldValues 使用反射获取结构体切片中某个字段的全部值
