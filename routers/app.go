@@ -30,7 +30,7 @@ func InitAppRouter(group *kid.RouterGroup) {
 
 		upload := logged.Group("/upload")
 		{
-			upload.GET("/token", handler.GetUploadToken)
+			upload.POST("", handler.Upload)
 		}
 	}
 

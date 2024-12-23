@@ -6,6 +6,7 @@ import (
 	"github.com/leor-w/kid/database/repos/updater"
 	"github.com/leor-w/kid/database/repos/where"
 	"github.com/leor-w/kid/errors"
+	"role_ai/common"
 	"role_ai/dto"
 	"role_ai/infrastructure/ecode"
 	"role_ai/models"
@@ -38,7 +39,7 @@ func (srv *UserService) GetUserDetail(uid int64) (*dto.User, error) {
 	if err != nil {
 		return nil, errors.New(ecode.DataProcessingErr)
 	}
-	userDetail.BirthdayStr = userDetail.Birthday.Format(dto.TimeFormatToDateTime)
+	userDetail.BirthdayStr = userDetail.Birthday.Format(common.TimeFormatToDateTime)
 	return &userDetail, nil
 }
 

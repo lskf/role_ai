@@ -2,10 +2,6 @@ package dto
 
 import "regexp"
 
-var (
-	TimeFormatToDateTime = "2006-01-02 15:04:05"
-)
-
 type CreatorAndUpdaterField struct {
 	CreatorId   int64  `json:"creator_id"`
 	UpdaterId   int64  `json:"updater_id"`

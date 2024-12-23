@@ -3,7 +3,9 @@ package handler
 import (
 	"context"
 	"github.com/leor-w/kid"
+	"role_ai/dto"
 	"role_ai/infrastructure/web"
+	"role_ai/models"
 	"role_ai/services"
 )
 
@@ -18,6 +20,16 @@ func (ctrl *UploadController) Provide(context.Context) any {
 	return uploadCtrl
 }
 
-func GetUploadToken(ctx *kid.Context) interface{} {
-	return web.Success(uploadCtrl.srv.GetQiniuUploadToken())
+func Upload(ctx *kid.Context) any {
+	//判断是否登录
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	path, err := uploadCtrl.srv.UploadFormFile(ctx, user.Uid)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(dto.UploadFileResp{FilePath: path})
 }

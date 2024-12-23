@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/leor-w/kid"
 	"github.com/leor-w/kid/errors"
+	"role_ai/common"
 	"role_ai/dto"
 	"role_ai/infrastructure/ecode"
 	"role_ai/infrastructure/web"
@@ -26,6 +27,9 @@ func (ctrl *UserController) Provide(context.Context) any {
 func GetUserDetail(ctx *kid.Context) any {
 	user := models.User{}
 	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
 	res, err := userCtrl.srv.GetUserDetail(user.Uid)
 	if err != nil {
 		return web.Error(err)
@@ -36,11 +40,14 @@ func GetUserDetail(ctx *kid.Context) any {
 func UpdateUser(ctx *kid.Context) any {
 	user := models.User{}
 	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
 	var req dto.User
 	if err := ctx.Valid(&req); err != nil {
 		return web.ParamsErr(err)
 	}
-	req.Birthday, err = time.Parse(dto.TimeFormatToDateTime, req.BirthdayStr)
+	req.Birthday, err = time.Parse(common.TimeFormatToDateTime, req.BirthdayStr)
 	if err != nil {
 		return web.ParamsErr(errors.New(ecode.ReqParamInvalidErr, err))
 	}
