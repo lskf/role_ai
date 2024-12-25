@@ -20,8 +20,9 @@ type User struct {
 }
 
 const (
-	UserMenberNormal = iota + 1
-	UserMenberNovice
-	UserMenberMiddle
-	UserMenberHigh
+	//会员等级
+	UserMenberNormal = iota + 1 //普通用户
+	UserMenberNovice            //初级会员
+	UserMenberMiddle            //中级会员
+	UserMenberHigh              //高级会员
 )

@@ -21,3 +21,8 @@ type RoleStyle struct {
 	RoleId  int64  `gorm:"column:role_id;type:int(11);default:0;comment:角色id;NOT NULL" json:"role_id"`
 	Content string `gorm:"column:content;type:text;comment:内容;NOT NULL" json:"content"`
 }
+
+const (
+	PubilcRole  = 1
+	PrivateRole = 2
+)

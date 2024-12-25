@@ -113,7 +113,11 @@ func (srv *RoleService) GetDetailById(id int64) (*dto.Role, error) {
 	return &data, nil
 }
 
-func (srv *RoleService) CreateRole(uid int64, data dto.CreateRoleReq) (int64, error) {
+func (srv *RoleService) CreateRole(user *models.User, data dto.CreateRoleReq) (int64, error) {
+	if data.IsPublic == models.PrivateRole && user.Menber == models.UserMenberNormal {
+		return 0, errors.New(ecode.MenberPermissionErr)
+	}
+
 	//判断声音是否存在
 	if data.VoiceId > 0 {
 		voice := models.Voice{}
@@ -131,7 +135,7 @@ func (srv *RoleService) CreateRole(uid int64, data dto.CreateRoleReq) (int64, er
 	if err != nil {
 		return 0, errors.New(ecode.DataProcessingErr, err)
 	}
-	role.Uid = uid
+	role.Uid = user.Id
 	role.CreatedAt = time.Now()
 	role.UpdatedAt = time.Now()
 
@@ -181,6 +185,10 @@ func (srv *RoleService) UpdateRole(user models.User, data dto.UpdateRoleResp) er
 		return errors.New(ecode.RoleNotExistErr, err)
 	}
 
+	//普通用户不能设置私密角色
+	if data.IsPublic == models.PrivateRole && user.Menber == models.UserMenberNormal {
+		return errors.New(ecode.MenberPermissionErr)
+	}
 	//公开角色不能修改为私密
 	if roleDetail.IsPublic == 1 && data.IsPublic == 2 {
 		return errors.New(ecode.PublicChangeErr)

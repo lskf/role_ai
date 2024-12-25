@@ -79,7 +79,7 @@ func CreateRole(ctx *kid.Context) any {
 		return web.ParamsErr(err)
 	}
 	req.Gamification = string(gamificationStr)
-	id, err := roleCtrl.srv.CreateRole(user.Uid, req)
+	id, err := roleCtrl.srv.CreateRole(&user, req)
 	if err != nil {
 		return web.Error(err)
 	}

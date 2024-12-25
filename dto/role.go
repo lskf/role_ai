@@ -5,13 +5,13 @@ import "time"
 type Role struct {
 	Id              int64            `json:"id"`
 	Uid             int64            `json:"uid"`                           //用户id
-	Avatar          string           `json:"avatar"`                        //头像
+	Avatar          string           `json:"avatar" validate:"required"`    //头像
 	RoleName        string           `json:"role_name" validate:"required"` //角色名称
 	Desc            string           `json:"desc" validate:"required"`      //角色简介
 	Remark          string           `json:"remark" validate:"required"`    //开场白
 	Tag             string           `json:"-"`                             //标签
 	Gamification    string           `json:"-"`                             //游戏化
-	IsPublic        int64            `json:"is_public"`                     //是否公开 1：公开，2：私密
+	IsPublic        int64            `json:"is_public" validate:"required"` //是否公开 1：公开，2：私密
 	VoiceId         int64            `json:"voice_id"`                      //声音模型id
 	ChatNum         int64            `json:"chat_num"`                      //对话人数
 	CreatedAt       time.Time        `json:"-"`
@@ -50,13 +50,13 @@ type CreateRoleReq struct {
 
 type UpdateRoleResp struct {
 	Id              int64            `json:"id"`                            //Id
-	Avatar          string           `json:"avatar"`                        //头像
+	Avatar          string           `json:"avatar" validate:"required"`    //头像
 	RoleName        string           `json:"role_name" validate:"required"` //角色名称
 	Desc            string           `json:"desc" validate:"required"`      //角色简介
 	Remark          string           `json:"remark" validate:"required"`    //开场白
 	Tag             string           `json:"-"`                             //标签
 	Gamification    string           `json:"-"`                             //游戏化
-	IsPublic        int64            `json:"is_public"`                     //是否公开 1：公开，2：私密
+	IsPublic        int64            `json:"is_public" validate:"required"` //是否公开 1：公开，2：私密
 	VoiceId         int64            `json:"voice_id"`                      //声音模型id
 	TagArray        []string         `json:"tag"`
 	StyleArray      []SpeechStyleObj `json:"style"`

@@ -43,14 +43,15 @@ var (
 	SignatureRequired      = &errors.Status{Code: 30013, Message: "X-Tsign-Sign 不能为空"}
 
 	// 400xx 登录错误
-	UserNotFound    = &errors.Status{Code: 40001, Message: "用户不存在"}
-	AdminNotFound   = &errors.Status{Code: 40002, Message: "管理员不存在"}
-	PasswordErr     = &errors.Status{Code: 40003, Message: "用户不存在或密码错误"}
-	TokenErr        = &errors.Status{Code: 40004, Message: "令牌生成失败"}
-	GenCaptchaErr   = &errors.Status{Code: 40005, Message: "验证码生成失败"}
-	CaptchaErr      = &errors.Status{Code: 40006, Message: "验证码错误"}
-	LogoutErr       = &errors.Status{Code: 40007, Message: "退出登录失败"}
-	TokenIsEmptyErr = &errors.Status{Code: 40008, Message: "令牌为空"}
+	UserNotFound        = &errors.Status{Code: 40001, Message: "用户不存在"}
+	AdminNotFound       = &errors.Status{Code: 40002, Message: "管理员不存在"}
+	PasswordErr         = &errors.Status{Code: 40003, Message: "用户不存在或密码错误"}
+	TokenErr            = &errors.Status{Code: 40004, Message: "令牌生成失败"}
+	GenCaptchaErr       = &errors.Status{Code: 40005, Message: "验证码生成失败"}
+	CaptchaErr          = &errors.Status{Code: 40006, Message: "验证码错误"}
+	LogoutErr           = &errors.Status{Code: 40007, Message: "退出登录失败"}
+	TokenIsEmptyErr     = &errors.Status{Code: 40008, Message: "令牌为空"}
+	MenberPermissionErr = &errors.Status{Code: 40009, Message: "用户会员权限不足，请升级会员等级"}
 
 	//500xx 角色错误
 	RoleNotExistErr = &errors.Status{Code: 50001, Message: "角色不存在"}
