@@ -36,6 +36,11 @@ func InitAppRouter(group *kid.RouterGroup) {
 			role.PUT("/:id", handler.UpdateRole)
 		}
 
+		voice := logged.Group("/voice")
+		{
+			voice.GET("", handler.GetVoiceList)
+		}
+
 		upload := logged.Group("/upload")
 		{
 			upload.POST("", handler.Upload)

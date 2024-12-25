@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	OK = &errors.Status{Code: 0, Message: "成功"}
+	OK = &errors.Status{Code: 200, Message: "成功"}
 
 	// 100xx 基本常用错误
 	ReqParamMissErr        = &errors.Status{Code: 10001, Message: "必填参数缺失或参数及类型错误"}

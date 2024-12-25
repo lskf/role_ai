@@ -21,9 +21,3 @@ type RoleStyle struct {
 	RoleId  int64  `gorm:"column:role_id;type:int(11);default:0;comment:角色id;NOT NULL" json:"role_id"`
 	Content string `gorm:"column:content;type:text;comment:内容;NOT NULL" json:"content"`
 }
-
-type Voice struct {
-	IdField
-	Name string `gorm:"column:name;type:varchar(255);comment:声音名称;NOT NULL" json:"name"`
-	Desc string `gorm:"column:desc;type:varchar(255);comment:简介;NOT NULL" json:"desc"`
-}

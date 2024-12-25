@@ -10,4 +10,5 @@ func InitController(appScope *injector.Scope) {
 	appScope.Provide(new(UploadController))
 	appScope.Provide(new(UserController))
 	appScope.Provide(new(RoleController))
+	appScope.Provide(new(VoiceController))
 }
