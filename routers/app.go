@@ -28,6 +28,14 @@ func InitAppRouter(group *kid.RouterGroup) {
 			user.PUT("", handler.UpdateUser)    //更新用户信息
 		}
 
+		role := logged.Group("/role")
+		{
+			role.GET("", handler.GetRoleList)
+			role.GET("/:id", handler.GetRoleDetail)
+			role.POST("", handler.CreateRole)
+			role.PUT("/:id", handler.UpdateRole)
+		}
+
 		upload := logged.Group("/upload")
 		{
 			upload.POST("", handler.Upload)

@@ -24,7 +24,6 @@ var (
 	AuthFailedErr         = &errors.Status{Code: 20004, Message: "验证失败"}
 	UserNotFoundErr       = &errors.Status{Code: 20005, Message: "用户不存在"}
 	TokenNotExistErr      = &errors.Status{Code: 20007, Message: "登录令牌已失效，请重新登录"}
-	RoleNotExistErr       = &errors.Status{Code: 20010, Message: "角色不存在"}
 	GenerateSecretErr     = &errors.Status{Code: 20011, Message: "生成密钥失败"}
 	GenerateEncryptKeyErr = &errors.Status{Code: 20012, Message: "生成加密密钥失败"}
 
@@ -52,4 +51,9 @@ var (
 	CaptchaErr      = &errors.Status{Code: 40006, Message: "验证码错误"}
 	LogoutErr       = &errors.Status{Code: 40007, Message: "退出登录失败"}
 	TokenIsEmptyErr = &errors.Status{Code: 40008, Message: "令牌为空"}
+
+	//500xx 角色错误
+	RoleNotExistErr = &errors.Status{Code: 50001, Message: "角色不存在"}
+	VoiceNotFound   = &errors.Status{Code: 50002, Message: "声音不存在"}
+	PublicChangeErr = &errors.Status{Code: 50003, Message: "公开角色不能改为私密"}
 )

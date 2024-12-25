@@ -12,6 +12,7 @@ func InitRepository(appScope *injector.Scope) {
 	appScope.Provide(new(AdminRepository))
 	appScope.Provide(new(SignerRepository))
 	appScope.Provide(new(SmsRepository))
+	appScope.Provide(new(RoleRepository))
 }
 
 type BasisRepository struct {
