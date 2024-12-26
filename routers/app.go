@@ -34,6 +34,8 @@ func InitAppRouter(group *kid.RouterGroup) {
 			role.GET("/:id", handler.GetRoleDetail)
 			role.POST("", handler.CreateRole)
 			role.PUT("/:id", handler.UpdateRole)
+			role.POST("/getRoleAvatarSetting", handler.GetRoleAvatarSetting)
+			role.POST("/getRoleSetting", handler.GetRoleSetting)
 		}
 
 		voice := logged.Group("/voice")

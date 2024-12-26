@@ -73,3 +73,22 @@ type RoleListResp struct {
 	List  []Role `json:"list"`
 	Total int64  `json:"total"`
 }
+
+type AiCreateRoleReq struct {
+	Gender        []string `json:"gender"`
+	StoryGenre    []string `json:"story_genre"`
+	RoleType      []string `json:"role_type"`
+	Personality   []string `json:"personality"`
+	Interests     []string `json:"interests"`
+	Preferences   []string `json:"preferences"`
+	Dislike       []string `json:"dislike"`
+	Background    []string `json:"background"`
+	Relationships []string `json:"relationships"`
+	Quirks        []string `json:"quirks"`
+	ArtStyle      string   `json:"art_style"`
+}
+
+type GetRoleAvatarResq struct {
+	ArtStyle string `json:"art_style"` //画风
+	Desc     string `json:"desc"`      //描述
+}

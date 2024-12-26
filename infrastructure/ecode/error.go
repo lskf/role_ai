@@ -57,4 +57,7 @@ var (
 	RoleNotExistErr = &errors.Status{Code: 50001, Message: "角色不存在"}
 	VoiceNotFound   = &errors.Status{Code: 50002, Message: "声音不存在"}
 	PublicChangeErr = &errors.Status{Code: 50003, Message: "公开角色不能改为私密"}
+
+	//600xx llm错误
+	ClaudeGeneratedContentErr = &errors.Status{Code: 60001, Message: "claude生成内容失败"}
 )

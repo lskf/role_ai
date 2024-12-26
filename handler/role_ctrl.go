@@ -122,3 +122,37 @@ func UpdateRole(ctx *kid.Context) any {
 	}
 	return web.Success()
 }
+
+func GetRoleAvatarSetting(ctx *kid.Context) any {
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var req dto.AiCreateRoleReq
+	if err := ctx.Valid(&req); err != nil {
+		return web.ParamsErr(err)
+	}
+	resq, err := roleCtrl.srv.GetRoleAvatarSetting(&req)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(resq)
+}
+
+func GetRoleSetting(ctx *kid.Context) any {
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var req dto.AiCreateRoleReq
+	if err := ctx.Valid(&req); err != nil {
+		return web.ParamsErr(err)
+	}
+	resq, err := roleCtrl.srv.GetRoleSetting(&req)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(resq)
+}
