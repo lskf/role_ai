@@ -31,12 +31,6 @@ type RoleStyle struct {
 	Content string `json:"content"`
 }
 
-type Voice struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
-	Desc string `json:"desc"`
-}
-
 type SpeechStyleObj struct {
 	User      string `json:"user"`      //用户输入
 	Assistant string `json:"assistant"` //角色回答
