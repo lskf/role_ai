@@ -135,7 +135,7 @@ func (srv *RoleService) CreateRole(user *models.User, data dto.CreateRoleReq) (i
 	if err != nil {
 		return 0, errors.New(ecode.DataProcessingErr, err)
 	}
-	role.Uid = user.Id
+	role.Uid = user.Uid
 	role.CreatedAt = time.Now()
 	role.UpdatedAt = time.Now()
 
@@ -219,7 +219,9 @@ func (srv *RoleService) UpdateRole(user models.User, data dto.UpdateRoleResp) er
 			Fields: map[string]interface{}{
 				"avatar":       roleDetail.Avatar,
 				"role_name":    roleDetail.RoleName,
+				"gender":       roleDetail.Gender,
 				"desc":         roleDetail.Desc,
+				"worldview":    roleDetail.Worldview,
 				"remark":       roleDetail.Remark,
 				"tag":          roleDetail.Tag,
 				"gamification": roleDetail.Gamification,
