@@ -1,12 +1,13 @@
 package dto
 
 type Voice struct {
-	Id     int64  `json:"id"`
-	Name   string `json:"name"`
-	Desc   string `json:"desc"`
-	Sample string `json:"sample"`
-	Pth    string `json:"-"`
-	Ckpt   string `json:"-"`
+	Id      int64    `json:"id"`
+	Name    string   `json:"name"`
+	Desc    string   `json:"-"`
+	Sample  string   `json:"sample"`
+	Pth     string   `json:"-"`
+	Ckpt    string   `json:"-"`
+	DescArr []string `json:"desc"`
 }
 
 type VoiceListReq struct {

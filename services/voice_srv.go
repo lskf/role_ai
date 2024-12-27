@@ -8,6 +8,7 @@ import (
 	"role_ai/infrastructure/ecode"
 	"role_ai/models"
 	"role_ai/repos"
+	"strings"
 )
 
 type VoiceService struct {
@@ -56,6 +57,11 @@ func (srv *RoleService) GetVoiceList(para dto.VoiceListReq) (*dto.VoiceListResp,
 	err = models.Copy(&res.List, &list)
 	if err != nil {
 		return nil, errors.New(ecode.DataProcessingErr, err)
+	}
+	for k, v := range res.List {
+		if v.Desc != "" {
+			res.List[k].DescArr = strings.Split(v.Desc, ";")
+		}
 	}
 	res.Total = total
 	return &res, nil
