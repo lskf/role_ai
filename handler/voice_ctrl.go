@@ -21,7 +21,7 @@ func (ctrl *VoiceController) Provide(context.Context) any {
 
 func GetVoiceList(ctx *kid.Context) any {
 	var para dto.VoiceListReq
-	if err := ctx.ShouldBindJSON(&para); err != nil {
+	if err := ctx.ShouldBindQuery(&para); err != nil {
 		return web.ParamsErr(err)
 	}
 	resp, err := roleCtrl.srv.GetVoiceList(para)

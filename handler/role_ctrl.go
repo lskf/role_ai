@@ -28,7 +28,7 @@ func (ctrl *RoleController) Provide(context.Context) any {
 // @return any
 func GetRoleList(ctx *kid.Context) any {
 	var para dto.RoleListReq
-	if err := ctx.ShouldBindJSON(&para); err != nil {
+	if err := ctx.ShouldBindQuery(&para); err != nil {
 		return web.ParamsErr(err)
 	}
 	resp, err := roleCtrl.srv.GetRoleList(para)

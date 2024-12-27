@@ -63,9 +63,9 @@ type UpdateRoleResp struct {
 }
 
 type RoleListReq struct {
-	Name string `json:"name"`
-	Uid  int64  `json:"uid"`
-	Sort int    `json:"sort"` // 1:按对话人数倒序，0：按创建时间倒序
+	Name string `json:"name" form:"name"`
+	Uid  int64  `json:"uid" form:"uid"`
+	Sort int    `json:"sort" json:"sort"` // 1:按对话人数倒序，0：按创建时间倒序
 	PageField
 }
 
