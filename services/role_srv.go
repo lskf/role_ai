@@ -15,6 +15,7 @@ import (
 	"role_ai/infrastructure/llm"
 	"role_ai/models"
 	"role_ai/repos"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -454,4 +455,44 @@ Response requirements:
 		return nil, errors.New(ecode.DataProcessingErr, err)
 	}
 	return &createRoleReq, nil
+}
+
+func (srv *RoleService) CreateRoleAvatar(uid int64, para *dto.CreateRoleAvatarReq) (any, error) {
+	comfyUi := (&llm.ComfyUi{}).NewComfyUi()
+	promptReq := llm.PromptReq{
+		//ClientId:    strconv.FormatInt(uid, 10), //todo
+		ClientId:    "0ca727a72e2e4ff095e83eee3efed92a", //todo
+		CkptName:    "juggernautXL_v9Rundiffusionphoto2.safetensors",
+		PictureNum:  strconv.FormatInt(para.PictureNum, 10),
+		Prompt:      para.Desc,
+		ParaFileUrl: "./files/comfyUi/role_avatar/createRoleAvatarPara.json",
+	}
+	resp, err := comfyUi.Prompt(promptReq)
+	if err != nil {
+		return "", errors.New(ecode.InternalErr, err)
+	}
+	return resp, nil
+}
+
+func (srv *RoleService) GetRoleAvatarHistory(promptId string) (any, error) {
+	comfyUi := (&llm.ComfyUi{}).NewComfyUi()
+	resp, err := comfyUi.GetHistoryDetail(promptId)
+	if err != nil {
+		return nil, errors.New(ecode.InternalErr, err)
+	}
+	return resp, nil
+}
+
+func (srv *RoleService) GetRoleAvatar(para *dto.GetViewReq) (any, error) {
+	viewReq := llm.ViewReq{
+		FileName:  para.FileName,
+		Type:      para.Type,
+		Subfolder: para.Subfolder,
+	}
+	comfyUi := (&llm.ComfyUi{}).NewComfyUi()
+	resp, err := comfyUi.View(viewReq)
+	if err != nil {
+		return nil, errors.New(ecode.InternalErr, err)
+	}
+	return resp, nil
 }

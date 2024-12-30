@@ -65,7 +65,7 @@ type UpdateRoleResp struct {
 type RoleListReq struct {
 	Name string `json:"name" form:"name"`
 	Uid  int64  `json:"uid" form:"uid"`
-	Sort int    `json:"sort" json:"sort"` // 1:按对话人数倒序，0：按创建时间倒序
+	Sort int    `json:"sort" form:"sort"` // 1:按对话人数倒序，0：按创建时间倒序
 	PageField
 }
 
@@ -91,4 +91,16 @@ type AiCreateRoleReq struct {
 type GetRoleAvatarResq struct {
 	ArtStyle string `json:"art_style"` //画风
 	Desc     string `json:"desc"`      //描述
+}
+
+type CreateRoleAvatarReq struct {
+	ArtStyle   string `json:"art_style" validate:"required"`   //画风
+	Desc       string `json:"desc" validate:"required"`        //描述
+	PictureNum int64  `json:"picture_num" validate:"required"` //图片数量
+}
+
+type GetViewReq struct {
+	FileName  string `json:"file_name" form:"file_name"`
+	Type      string `json:"type" form:"type"`
+	Subfolder string `json:"subfolder" form:"subfolder"`
 }

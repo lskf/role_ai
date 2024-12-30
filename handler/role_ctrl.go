@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/leor-w/kid"
 	"role_ai/dto"
 	"role_ai/infrastructure/web"
@@ -155,4 +156,55 @@ func GetRoleSetting(ctx *kid.Context) any {
 		return web.Error(err)
 	}
 	return web.Success(resq)
+}
+
+func CreateRoleAvatar(ctx *kid.Context) any {
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var req dto.CreateRoleAvatarReq
+	if err := ctx.Valid(&req); err != nil {
+		return web.ParamsErr(err)
+	}
+	resp, err := roleCtrl.srv.CreateRoleAvatar(user.Uid, &req)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(resp)
+}
+
+func GetRoleAvatarHistory(ctx *kid.Context) any {
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	promptId := ctx.FindString("prompt_id")
+	if promptId == "" {
+		return web.ParamsErr(errors.New("prompt_id 为空"))
+	}
+	resp, err := roleCtrl.srv.GetRoleAvatarHistory(promptId)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(resp)
+}
+
+func GetRoleAvatar(ctx *kid.Context) any {
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var req dto.GetViewReq
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		return web.ParamsErr(err)
+	}
+	resp, err := roleCtrl.srv.GetRoleAvatar(&req)
+	if err != nil {
+		return web.Error(err)
+	}
+	return resp
 }
