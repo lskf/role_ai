@@ -460,8 +460,7 @@ Response requirements:
 func (srv *RoleService) CreateRoleAvatar(uid int64, para *dto.CreateRoleAvatarReq) (any, error) {
 	comfyUi := (&llm.ComfyUi{}).NewComfyUi()
 	promptReq := llm.PromptReq{
-		//ClientId:    strconv.FormatInt(uid, 10), //todo
-		ClientId:    "0ca727a72e2e4ff095e83eee3efed92a", //todo
+		ClientId:    strconv.FormatInt(uid, 10),
 		CkptName:    "juggernautXL_v9Rundiffusionphoto2.safetensors",
 		PictureNum:  strconv.FormatInt(para.PictureNum, 10),
 		Prompt:      para.Desc,

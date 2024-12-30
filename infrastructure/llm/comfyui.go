@@ -100,7 +100,7 @@ func (comfyUi *ComfyUi) Prompt(para PromptReq) (*PromptResp, error) {
 		return nil, errors.New(fmt.Sprintf("读取参数文件失败fileUrl:%s,，err:%s", para.ParaFileUrl, err.Error()))
 	}
 	data := string(dataByte)
-	//替换 todo
+	//替换
 	data = strings.Replace(data, "{{client_id}}", para.ClientId, -1)
 	data = strings.Replace(data, "{{ckpt_name}}", para.CkptName, -1)
 	data = strings.Replace(data, "{{picture_num}}", para.PictureNum, -1)
