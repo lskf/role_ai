@@ -461,10 +461,10 @@ func (srv *RoleService) CreateRoleAvatar(uid int64, para *dto.CreateRoleAvatarRe
 	comfyUi := (&llm.ComfyUi{}).NewComfyUi()
 	promptReq := llm.PromptReq{
 		ClientId:    strconv.FormatInt(uid, 10),
-		CkptName:    "juggernautXL_v9Rundiffusionphoto2.safetensors",
+		CkptName:    "juggernautXL_v9Rundiffusionphoto2.safetensors", //todo
 		PictureNum:  strconv.FormatInt(para.PictureNum, 10),
 		Prompt:      para.Desc,
-		ParaFileUrl: "./files/comfyUi/role_avatar/createRoleAvatarPara.json",
+		ParaFileUrl: "./files/comfyUi/role_avatar/createRoleAvatarPara.json", //todo
 	}
 	resp, err := comfyUi.Prompt(promptReq)
 	if err != nil {
