@@ -28,7 +28,7 @@ func (srv *SmsService) Provide(_ context.Context) interface{} {
 // @param phone
 // @return error
 func (srv *SmsService) SendCode(phone string) error {
-	code := tools.RandomInt64InRange(0, 999999)
+	code := tools.RandomInt64InRange(100000, 999999)
 	codeStr := strconv.FormatInt(code, 10)
 	//反正频繁操作
 	ok, err := srv.smsRepo.LockKey(phone, 1)
