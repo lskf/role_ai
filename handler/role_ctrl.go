@@ -202,9 +202,9 @@ func GetRoleAvatar(ctx *kid.Context) any {
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		return web.ParamsErr(err)
 	}
-	resp, err := roleCtrl.srv.GetRoleAvatar(&req)
+	resp, err := roleCtrl.srv.GetRoleAvatar(user.Uid, &req)
 	if err != nil {
 		return web.Error(err)
 	}
-	return resp
+	return web.Success(resp)
 }

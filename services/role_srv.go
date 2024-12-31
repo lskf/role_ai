@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/leor-w/kid/config"
 	"github.com/leor-w/kid/database/repos/creator"
 	"github.com/leor-w/kid/database/repos/deleter"
 	"github.com/leor-w/kid/database/repos/finder"
 	"github.com/leor-w/kid/database/repos/updater"
 	"github.com/leor-w/kid/database/repos/where"
 	"github.com/leor-w/kid/errors"
+	"role_ai/common"
 	"role_ai/dto"
 	"role_ai/infrastructure/ecode"
 	"role_ai/infrastructure/llm"
@@ -22,6 +24,8 @@ import (
 
 type RoleService struct {
 	roleRepo repos.IRoleRepository `inject:""`
+
+	uploadSrv *UploadService `inject:""`
 }
 
 func (srv *RoleService) Provide(_ context.Context) any {
@@ -482,16 +486,24 @@ func (srv *RoleService) GetRoleAvatarHistory(promptId string) (any, error) {
 	return resp, nil
 }
 
-func (srv *RoleService) GetRoleAvatar(para *dto.GetViewReq) (any, error) {
-	viewReq := llm.ViewReq{
-		FileName:  para.FileName,
-		Type:      para.Type,
-		Subfolder: para.Subfolder,
-	}
-	comfyUi := (&llm.ComfyUi{}).NewComfyUi()
-	resp, err := comfyUi.View(viewReq)
-	if err != nil {
-		return nil, errors.New(ecode.InternalErr, err)
-	}
-	return resp, nil
+func (srv *RoleService) GetRoleAvatar(uid int64, para *dto.GetViewReq) (any, error) {
+	baseUrl := config.GetString("llm.comfyUi.baseUrl")
+	url := "/view?filename={{filename}}&subfolder{{subfolder}}=&type={{type}}"
+	url = strings.Replace(url, "{{filename}}", para.FileName, 1)
+	url = strings.Replace(url, "{{subfolder}}", para.Subfolder, 1)
+	url = strings.Replace(url, "{{type}}", para.Type, 1)
+
+	resp, err := srv.uploadSrv.UploadUrlFile(uid, baseUrl+url, common.UploadFileTypeRoleAvatar)
+	return resp, err
+	//viewReq := llm.ViewReq{
+	//	FileName:  para.FileName,
+	//	Type:      para.Type,
+	//	Subfolder: para.Subfolder,
+	//}
+	//comfyUi := (&llm.ComfyUi{}).NewComfyUi()
+	//resp, err := comfyUi.View(viewReq)
+	//if err != nil {
+	//	return nil, errors.New(ecode.InternalErr, err)
+	//}
+	//return resp, err
 }

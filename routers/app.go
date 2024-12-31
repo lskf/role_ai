@@ -46,9 +46,10 @@ func InitAppRouter(group *kid.RouterGroup) {
 			voice.GET("", handler.GetVoiceList)
 		}
 
-		upload := logged.Group("/upload")
+		upload := logged.Group("")
 		{
-			upload.POST("", handler.Upload)
+			upload.POST("/upload", handler.Upload)
+			upload.POST("/uploadByUrl", handler.UploadByUrl)
 		}
 	}
 
