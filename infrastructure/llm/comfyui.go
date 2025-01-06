@@ -101,10 +101,11 @@ func (comfyUi *ComfyUi) Prompt(para PromptReq) (*PromptResp, error) {
 	}
 	data := string(dataByte)
 	//替换
+	promptStr := strings.Trim(strconv.Quote(para.Prompt), "\"")
 	data = strings.Replace(data, "{{client_id}}", para.ClientId, -1)
 	data = strings.Replace(data, "{{ckpt_name}}", para.CkptName, -1)
 	data = strings.Replace(data, "{{picture_num}}", para.PictureNum, -1)
-	data = strings.Replace(data, "{{prompt_str}}", para.Prompt, -1)
+	data = strings.Replace(data, "{{prompt_str}}", promptStr, -1)
 	data = strings.Replace(data, "{{seed}}", strconv.FormatInt(time.Now().UnixMicro(), 10), -1)
 	req, err := NewRequest("POST", comfyUi.options.BaseURL+"/prompt", []byte(data), false)
 	if err != nil {
