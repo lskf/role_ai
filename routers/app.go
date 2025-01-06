@@ -30,7 +30,7 @@ func InitAppRouter(group *kid.RouterGroup) {
 
 		role := logged.Group("/role")
 		{
-			role.GET("", handler.GetRoleList)
+			role.GET("/list", handler.GetRoleList)
 			role.GET("/:id", handler.GetRoleDetail)
 			role.POST("", handler.CreateRole)
 			role.PUT("/:id", handler.UpdateRole)
