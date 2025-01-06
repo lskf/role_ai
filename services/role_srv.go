@@ -24,6 +24,7 @@ import (
 
 type RoleService struct {
 	roleRepo repos.IRoleRepository `inject:""`
+	userRepo repos.IUserRepository `inject:""`
 
 	uploadSrv *UploadService `inject:""`
 }
@@ -91,6 +92,19 @@ func (srv *RoleService) GetDetailById(id int64) (*dto.Role, error) {
 	if err != nil {
 		return nil, errors.New(ecode.DataProcessingErr, err)
 	}
+	//获取创建者信息
+	user := models.User{}
+	err = srv.userRepo.GetOne(&finder.Finder{
+		Model:          new(models.User),
+		Wheres:         where.New().And(where.Eq("uid", role.Uid)),
+		IgnoreNotFound: true,
+		Recipient:      &user,
+	})
+	if err != nil {
+		return nil, errors.New(ecode.UserNotFoundErr, err)
+	}
+	data.UserNickName = user.NickName
+	data.UserAvatar = user.Avatar
 	//获取角色风格
 	roleStyle := models.RoleStyle{}
 	err = srv.roleRepo.GetOne(&finder.Finder{
@@ -117,6 +131,8 @@ func (srv *RoleService) GetDetailById(id int64) (*dto.Role, error) {
 		return nil, errors.New(ecode.DataProcessingErr, err)
 	}
 	data.GamificationObj = gamificationObj
+	data.CreatedAtStr = data.CreatedAt.Format(common.TimeFormatToDateTime)
+	data.UpdatedAtStr = data.UpdatedAt.Format(common.TimeFormatToDateTime)
 	return &data, nil
 }
 
@@ -224,6 +240,7 @@ func (srv *RoleService) UpdateRole(user models.User, data dto.UpdateRoleResp) er
 			Model:  new(models.Role),
 			Wheres: where.New().And(where.Eq("id", roleDetail.Id)),
 			Fields: map[string]interface{}{
+				"avatar_img":   roleDetail.AvatarImg,
 				"avatar":       roleDetail.Avatar,
 				"role_name":    roleDetail.RoleName,
 				"gender":       roleDetail.Gender,

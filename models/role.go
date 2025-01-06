@@ -3,6 +3,7 @@ package models
 type Role struct {
 	IdField
 	UidField
+	AvatarImg    string `gorm:"column:avatar_img;type:varchar(255);comment:头像完整图片;NOT NULL" json:"avatar_img"`
 	Avatar       string `gorm:"column:avatar;type:varchar(255);comment:头像;NOT NULL" json:"avatar"`
 	RoleName     string `gorm:"column:role_name;type:varchar(255);comment:角色名称;NOT NULL" json:"role_name"`
 	Gender       string `gorm:"column:gender;type:varchar(50);comment:性别;NOT NULL" json:"gender"`

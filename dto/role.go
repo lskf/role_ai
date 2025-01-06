@@ -4,23 +4,26 @@ import "time"
 
 type Role struct {
 	Id              int64            `json:"id"`
-	Uid             int64            `json:"uid"`                           //用户id
-	Avatar          string           `json:"avatar" validate:"required"`    //头像
-	RoleName        string           `json:"role_name" validate:"required"` //角色名称
-	Gender          string           `json:"gender" validate:"required"`    //性别
-	Desc            string           `json:"desc" validate:"required"`      //角色简介
-	Worldview       string           `json:"worldview" validate:"required"` //世界观
-	Remark          string           `json:"remark" validate:"required"`    //开场白
-	Tag             string           `json:"-"`                             //标签
-	Gamification    string           `json:"-"`                             //游戏化
-	IsPublic        int64            `json:"is_public" validate:"required"` //是否公开 1：公开，2：私密
-	VoiceId         int64            `json:"voice_id"`                      //声音模型id
-	ChatNum         int64            `json:"chat_num"`                      //对话人数
+	Uid             int64            `json:"uid"`                            //用户id
+	AvatarImg       string           `json:"avatar_img" validate:"required"` //头像完整图片
+	Avatar          string           `json:"avatar" validate:"required"`     //头像
+	RoleName        string           `json:"role_name" validate:"required"`  //角色名称
+	Gender          string           `json:"gender" validate:"required"`     //性别
+	Desc            string           `json:"desc" validate:"required"`       //角色简介
+	Worldview       string           `json:"worldview" validate:"required"`  //世界观
+	Remark          string           `json:"remark" validate:"required"`     //开场白
+	Tag             string           `json:"-"`                              //标签
+	Gamification    string           `json:"-"`                              //游戏化
+	IsPublic        int64            `json:"is_public" validate:"required"`  //是否公开 1：公开，2：私密
+	VoiceId         int64            `json:"voice_id"`                       //声音模型id
+	ChatNum         int64            `json:"chat_num"`                       //对话人数
 	CreatedAt       time.Time        `json:"-"`
 	UpdatedAt       time.Time        `json:"-"`
 	TagArray        []string         `json:"tag"`
 	StyleArray      []SpeechStyleObj `json:"style"`
 	GamificationObj `json:"gamification"`
+	UserNickName    string `json:"user_nick_name"`
+	UserAvatar      string `json:"user_avatar"`
 	CreatedAtStr    string `json:"created_at"`
 	UpdatedAtStr    string `json:"updated_at"`
 }
@@ -46,17 +49,18 @@ type CreateRoleReq struct {
 }
 
 type UpdateRoleResp struct {
-	Id              int64            `json:"id"`                            //Id
-	Avatar          string           `json:"avatar" validate:"required"`    //头像
-	RoleName        string           `json:"role_name" validate:"required"` //角色名称
-	Gender          string           `json:"gender" validate:"required"`    //性别
-	Desc            string           `json:"desc" validate:"required"`      //角色简介
-	Worldview       string           `json:"worldview" validate:"required"` //世界观
-	Remark          string           `json:"remark" validate:"required"`    //开场白
-	Tag             string           `json:"-"`                             //标签
-	Gamification    string           `json:"-"`                             //游戏化
-	IsPublic        int64            `json:"is_public" validate:"required"` //是否公开 1：公开，2：私密
-	VoiceId         int64            `json:"voice_id"`                      //声音模型id
+	Id              int64            `json:"id"`                             //Id
+	AvatarImg       string           `json:"avatar_img" validate:"required"` //头像完整图片
+	Avatar          string           `json:"avatar" validate:"required"`     //头像
+	RoleName        string           `json:"role_name" validate:"required"`  //角色名称
+	Gender          string           `json:"gender" validate:"required"`     //性别
+	Desc            string           `json:"desc" validate:"required"`       //角色简介
+	Worldview       string           `json:"worldview" validate:"required"`  //世界观
+	Remark          string           `json:"remark" validate:"required"`     //开场白
+	Tag             string           `json:"-"`                              //标签
+	Gamification    string           `json:"-"`                              //游戏化
+	IsPublic        int64            `json:"is_public" validate:"required"`  //是否公开 1：公开，2：私密
+	VoiceId         int64            `json:"voice_id"`                       //声音模型id
 	TagArray        []string         `json:"tag"`
 	StyleArray      []SpeechStyleObj `json:"style"`
 	GamificationObj `json:"gamification"`
