@@ -46,7 +46,7 @@ func (srv *RoleService) GetRoleList(para dto.RoleListReq) (*dto.RoleListResp, er
 		listWhere = listWhere.And(where.Eq("uid", para.Uid))
 	}
 	if para.Name != "" {
-		listWhere = listWhere.And(where.Like("name", "%"+para.Name+"%"))
+		listWhere = listWhere.And(where.Like("role_name", "%"+para.Name+"%"))
 	}
 
 	if para.Sort != 0 {
