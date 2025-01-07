@@ -13,6 +13,7 @@ func InitService(appScope *injector.Scope) {
 	appScope.Provide(new(UserService))
 	appScope.Provide(new(RoleService))
 	appScope.Provide(new(VoiceService))
+	appScope.Provide(new(ChatService))
 }
 
 // GetFieldValues 使用反射获取结构体切片中某个字段的全部值

@@ -22,6 +22,6 @@ __debug_bin*
 /cert/
 /config/
 /temp/
-/files/comfyUi
+/files
 
 .app

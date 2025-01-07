@@ -14,6 +14,7 @@ func InitRepository(appScope *injector.Scope) {
 	appScope.Provide(new(SmsRepository))
 	appScope.Provide(new(RoleRepository))
 	appScope.Provide(new(VoiceRepository))
+	appScope.Provide(new(ChatRepository))
 }
 
 type BasisRepository struct {

@@ -11,4 +11,5 @@ func InitController(appScope *injector.Scope) {
 	appScope.Provide(new(UserController))
 	appScope.Provide(new(RoleController))
 	appScope.Provide(new(VoiceController))
+	appScope.Provide(new(ChatController))
 }

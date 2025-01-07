@@ -51,6 +51,11 @@ func InitAppRouter(group *kid.RouterGroup) {
 			upload.POST("/upload", handler.Upload)
 			upload.POST("/uploadByUrl", handler.UploadByUrl)
 		}
+
+		chat := logged.Group("/chat")
+		{
+			chat.POST("", handler.Chat)
+		}
 	}
 
 }

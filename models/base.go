@@ -90,7 +90,7 @@ type DatabaseMigrate struct{}
 // Models 在此处注册返回需要自动迁移的模型
 func (dm *DatabaseMigrate) Models() []interface{} {
 	return []interface{}{
-		new(Admin), new(User), new(Role), new(RoleStyle), new(Voice),
+		new(Admin), new(User), new(Role), new(RoleStyle), new(Voice), new(Chat), new(ChatHistory),
 	}
 }
 

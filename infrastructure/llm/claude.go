@@ -10,9 +10,10 @@ import (
 type CompletionReq = anthropic.CompletionNewParams
 type CompletionRes = anthropic.Completion
 type MessageReq struct {
-	Model    string
-	MaxToken int64
-	Messages []MessageObj
+	Model         string
+	MaxToken      int64
+	Messages      []MessageObj
+	SystemSetting string
 }
 type MessageObj struct {
 	User      string
@@ -68,10 +69,19 @@ func (claude *Claude) Message(req MessageReq) (res *MessageRes, err error) {
 			messageParam = append(messageParam, anthropic.NewAssistantMessage(anthropic.NewTextBlock(v.Assistant)))
 		}
 	}
-	res, err = claude.cli.Messages.New(context.TODO(), anthropic.MessageNewParams{
-		Model:     anthropic.F(req.Model),
-		MaxTokens: anthropic.F(req.MaxToken),
-		Messages:  anthropic.F(messageParam),
-	})
+	messagePara := anthropic.MessageNewParams{}
+	messagePara.Model = anthropic.F(req.Model)
+	messagePara.MaxTokens = anthropic.F(req.MaxToken)
+	messagePara.Messages = anthropic.F(messageParam)
+	if req.SystemSetting != "" {
+		messagePara.System = anthropic.F([]anthropic.TextBlockParam{
+			{
+				Text: anthropic.F(req.SystemSetting),
+				Type: anthropic.F(anthropic.TextBlockParamTypeText),
+				CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
+					Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral)}),
+			}})
+	}
+	res, err = claude.cli.Messages.New(context.TODO(), messagePara)
 	return
 }
