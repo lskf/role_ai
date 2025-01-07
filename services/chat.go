@@ -32,7 +32,7 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 		role                 models.Role
 		roleStyle            models.RoleStyle
 		chat                 models.Chat
-		chatHistory          models.ChatHistory
+		chatHistories        []models.ChatHistory
 		chatShortTermHistory []*models.ChatHistory //短期记忆
 
 		chatRecords   []llm.MessageObj
@@ -78,7 +78,7 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 	chatRecords = make([]llm.MessageObj, 0)
 	//获取短期记忆
 	if chat.Id > 0 {
-		chatShortTermHistory, err = srv.chatRepo.GetChatShortTermHistory(chat.Id)
+		chatShortTermHistory, err = srv.chatRepo.GetChatShortTermMemory(chat.Id)
 		if err != nil {
 			return nil, errors.New(ecode.DatabaseErr, err)
 		}
@@ -88,7 +88,12 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 		chatRecords = append(chatRecords, llm.MessageObj{Assistant: role.Remark})
 	} else {
 		for _, history := range chatShortTermHistory {
-			chatRecords = append(chatRecords, llm.MessageObj{User: history.Question, Assistant: history.Answer})
+			switch history.RoleType {
+			case models.ChatHistoryRoleUser:
+				chatRecords = append(chatRecords, llm.MessageObj{User: history.Content})
+			case models.ChatHistoryRoleAssistant:
+				chatRecords = append(chatRecords, llm.MessageObj{Assistant: history.Content})
+			}
 		}
 	}
 	chatRecords = append(chatRecords, llm.MessageObj{User: para.Question})
@@ -114,6 +119,8 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 		return nil, errors.New(ecode.InternalErr, errors.New(ecode.ClaudeGeneratedContentErr))
 	}
 	content := resp.Content[0].Text
+	askContent := models.Reply{Content: para.Question}
+	askContentStr, _ := json.Marshal(askContent)
 	replyContent := models.Reply{}
 	err = json.Unmarshal([]byte(content), &replyContent)
 	if err != nil {
@@ -127,12 +134,20 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 	} else {
 		chat.UpdatedAt = time.Now()
 	}
-	chatHistory.Question = para.Question
-	chatHistory.Answer = replyContent.Content
-	chatHistory.Abstract = replyContent.Details
-	chatHistory.Content = content
-	chatHistory.CreatedAt = time.Now()
-	chatHistory.UpdatedAt = time.Now()
+	chatHistories = make([]models.ChatHistory, 2)
+	chatHistories[0].RoleType = models.ChatHistoryRoleUser
+	chatHistories[0].Type = models.ChatHistoryTypeChat
+	chatHistories[0].Content = para.Question
+	chatHistories[0].Info = string(askContentStr)
+	chatHistories[0].CreatedAt = time.Now()
+	chatHistories[0].UpdatedAt = time.Now()
+
+	chatHistories[1].RoleType = models.ChatHistoryRoleAssistant
+	chatHistories[1].Type = models.ChatHistoryTypeChat
+	chatHistories[1].Content = replyContent.Content
+	chatHistories[1].Info = content
+	chatHistories[1].CreatedAt = time.Now()
+	chatHistories[1].UpdatedAt = time.Now()
 	err = srv.chatRepo.Transaction(func(ctx context.Context) error {
 		if chat.Id == 0 {
 			//创建对话
@@ -156,19 +171,20 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 				return errors.New(ecode.DatabaseErr, err)
 			}
 		}
-		chatHistory.ChatId = chat.Id
+		chatHistories[0].ChatId = chat.Id
+		chatHistories[1].ChatId = chat.Id
 		err = srv.chatRepo.Create(&creator.Creator{
 			Tx:   ctx,
-			Data: &chatHistory,
+			Data: &chatHistories,
 		})
 		if err != nil {
 			return errors.New(ecode.DatabaseErr, err)
 		}
 		//保存到缓存中
-		err = srv.chatRepo.AddChatShortTermHistory(chat.Id, &chatHistory)
+		err = srv.chatRepo.AddChatShortTermMemory(chat.Id, chatHistories)
 		if err != nil {
 			//如果失败的话，删除缓存
-			_ = srv.chatRepo.DelChatShortTermHistory(chat.Id)
+			_ = srv.chatRepo.DelChatShortTermMemory(chat.Id)
 		}
 		return nil
 	})
