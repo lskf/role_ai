@@ -450,7 +450,7 @@ Response requirements:
 {valueType}: {char}'s sexual desire towards {user}
 {value1}: {value1}/100 (initial sexual desire: {value1})
 -The generated format must be output in the following Json format:
-{"role_name":"testCreate","gender":"","desc":"A brave warrior with unmatched skills.","worldview":"","remark":"Welcome to my world!","tag":["fighter","hero"],"is_public":1,"style":[{"user":"I'm really angry!","role":"What's wrong? If you want, can you tell me? I hope to understand you from your life."},{"user":"I'm so happy now!","role":"Wow!!! What's so happy? I want to hear it too!!!"}],"gamification":{"affection_initial":10,"sexuality_initial":15}}
+{"role_name":"testCreate","gender":"","desc":"A brave warrior with unmatched skills.","worldview":"","remark":"Welcome to my world!","tag":["fighter","hero"],"is_public":1,"style":[{"user":"I'm really angry!","role":"What's wrong? If you want, can you tell me? I hope to understand you from your life."},{"user":"I'm so happy now!","role":"Wow!!! What's so happy? I want to hear it too!!!"}],"gamification":{"affection":10,"sexuality":15}}
 -If no tag is selected, a random tag is generated according to the Json format described above`
 	prompt = fmt.Sprintf(prompt, gender, storyGenre, roleType, personality, interests, preferences, dislike, background, relationships, quirks, artStyle)
 

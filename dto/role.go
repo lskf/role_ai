@@ -40,8 +40,8 @@ type SpeechStyleObj struct {
 }
 
 type GamificationObj struct {
-	AffectionInitial int64 `json:"affection_initial"`
-	SexualityInitial int64 `json:"sexuality_initial"`
+	Affection int64 `json:"affection"`
+	Sexuality int64 `json:"sexuality"`
 }
 
 type CreateRoleReq struct {

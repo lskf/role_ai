@@ -4,13 +4,19 @@ const (
 	ChatHistoryRoleUser      = 1
 	ChatHistoryRoleAssistant = 2
 	ChatHistoryTypeChat      = 1 //对话
+	ReplyStyleLyrical        = 1
+	ReplyStyleMaleNsfw       = 2
+	ReplyStyleFemaleNsfw     = 3
 )
 
 // 聊天记录表
 type Chat struct {
 	IdField
 	UidField
-	RoleId int64 `gorm:"column:role_id;type:int(11);default:0;comment:角色id;NOT NULL" json:"role_id"`
+	RoleId       int64  `gorm:"column:role_id;type:int(11);default:0;comment:角色id;NOT NULL" json:"role_id"`
+	ReplyStyle   int64  `gorm:"column:reply_style;type:tinyint(4);comment:回复风格，1：lyrical，2：male nsfw，3：female nsfw ;NOT NULL" json:"reply_style"`
+	WordCount    int64  `gorm:"column:word_count;type:int(11);comment:字数规模;NOT NULL" json:"word_count"`
+	Gamification string `gorm:"column:gamification;type:text;comment:游戏化" json:"gamification"`
 	CreatedAtField
 	UpdatedAtField
 }
@@ -43,5 +49,6 @@ type Reply struct {
 	Locations string `json:"locations"`
 	Weather   string `json:"weather"`
 	Content   string `json:"content"`
-	Details   string `json:"details"`
+	Affection string `json:"affection"`
+	Sexuality string `json:"sexuality"`
 }

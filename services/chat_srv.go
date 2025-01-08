@@ -15,6 +15,7 @@ import (
 	"role_ai/infrastructure/llm"
 	"role_ai/models"
 	"role_ai/repos"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -99,7 +100,7 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 	}
 	chatRecords = append(chatRecords, llm.MessageObj{User: para.Question})
 	//拼systemSetting
-	systemSetting, err = srv.spliceSystem()
+	systemSetting, err = srv.spliceSystem(role, chat)
 	if err != nil {
 		return nil, err
 	}
@@ -153,6 +154,8 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 	err = srv.chatRepo.Transaction(func(ctx context.Context) error {
 		if chat.Id == 0 {
 			//创建对话
+			gamification, _ := json.Marshal(role.Gamification)
+			chat.Gamification = string(gamification)
 			err = srv.chatRepo.Create(&creator.Creator{
 				Tx:   ctx,
 				Data: &chat,
@@ -161,12 +164,21 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 				return errors.New(ecode.DatabaseErr, err)
 			}
 		} else {
+			affection, _ := strconv.Atoi(replyContent.Affection)
+			sexuality, _ := strconv.Atoi(replyContent.Sexuality)
+			gamificationObj := dto.GamificationObj{
+				Affection: int64(affection),
+				Sexuality: int64(sexuality),
+			}
+			gamification, _ := json.Marshal(gamificationObj)
+			chat.Gamification = string(gamification)
 			err = srv.chatRepo.Update(&updater.Updater{
 				Tx:     ctx,
 				Model:  new(models.Chat),
 				Wheres: where.New().And(where.Eq("id", chat.Id)),
 				Fields: map[string]interface{}{
-					"updated_at": chat.UpdatedAt,
+					"gamification": chat.Gamification,
+					"updated_at":   chat.UpdatedAt,
 				},
 			})
 			if err != nil {
@@ -195,27 +207,33 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	reply := dto.ChatHistory{}
-	err = models.Copy(&reply, &chatHistories[1])
+	reply := make([]dto.ChatHistory, 2)
+	err = models.Copy(&reply, &chatHistories)
 	if err != nil {
 		return nil, errors.New(ecode.DataProcessingErr, err)
 	}
+	reply[1].Affection = replyContent.Affection
+	reply[1].Sexuality = replyContent.Sexuality
 	return &reply, err
 }
 
 func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (any, error) {
 	var (
 		chatList  []models.Chat
+		roleList  []models.Role
 		total     int64
 		listWhere where.Wheres
 		sort      string
+		roleIds   []int64
 		//res       dto.ChatListResp
 	)
 
 	listWhere = listWhere.And(where.Eq("uid", uid))
-	if para.Name != "" {
-		listWhere = listWhere.And(where.Like("role_name", "%"+para.Name+"%"))
-	}
+	//if para.Name != "" {
+	//	//获取角色id
+	//
+	//	listWhere = listWhere.And(where.Like("role_name", "%"+para.Name+"%"))
+	//}
 
 	sort += "id desc"
 
@@ -232,6 +250,23 @@ func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (any, error) {
 	if err != nil {
 		return nil, errors.New(ecode.DatabaseErr, err)
 	}
+	//获取角色列表
+	for _, v := range chatList {
+		roleIds = append(roleIds, v.RoleId)
+	}
+	err = srv.roleRepo.Find(&finder.Finder{
+		Model:     models.Role{},
+		Wheres:    where.New().And(where.In("id", roleIds)),
+		Recipient: &roleList,
+		Total:     &total,
+	})
+	if err != nil {
+		return nil, errors.New(ecode.DatabaseErr, err)
+	}
+	roleM := make(map[int64]models.Role)
+	for _, v := range roleList {
+		roleM[v.Id] = v
+	}
 	return nil, nil
 }
 
@@ -239,24 +274,29 @@ func (srv *ChatService) splicePrompt(input string) (string, error) {
 	return input, nil
 }
 
-func (srv *ChatService) spliceSystem() (string, error) {
+func (srv *ChatService) spliceSystem(role models.Role, chat models.Chat) (string, error) {
 	type SystemContent struct {
-		SystemContent   string `json:"systemContent"`
-		Setting         string `json:"setting"`
-		RoleSetting     string `json:"roleSetting"`
-		StatusBlockRule string `json:"statusBlockRule"`
-		Repeat          string `json:"repeat"`
-		NSFW            string `json:"NSFW"`
-		Request         string `json:"request"`
-		SecondPerson    string `json:"secondPerson"`
-		TimeFormat      string `json:"timeFormat"`
-		Psychology      string `json:"psychology"`
-		Style           string `json:"style"`
-		SummaryRules    string `json:"summaryRules"`
-		Response        string `json:"response"`
-		Config          string `json:"config"`
-		Jailbreak       string `json:"jailbreak"`
-		ReplyFormat     string `json:"replyFormat"`
+		Initialization     string `json:"initialization"`
+		Setting            string `json:"setting"`
+		Repeat             string `json:"repeat"`
+		ConvenientFlirting string `json:"convenientFlirting"`
+		RoleSetting        string `json:"roleSetting"`
+		InitialState       string `json:"initialState"`
+		StatusBlockRule    string `json:"statusBlockRule"`
+		RepeatPro          string `json:"repeat_pro"`
+		NSFW               string `json:"NSFW"`
+		Request            string `json:"request"`
+		SecondPerson       string `json:"secondPerson"`
+		TimeFormat         string `json:"timeFormat"`
+		Psychology         string `json:"psychology"`
+		Style              string `json:"style"`
+		FeMaleStyle        string `json:"FeMale_style"`
+		MaleStyle          string `json:"Male_style"`
+		Response           string `json:"response"`
+		WordLimit          string `json:"wordLimit"`
+		Config             string `json:"config"`
+		Jailbreak          string `json:"jailbreak"`
+		ReplyFormat        string `json:"replyFormat"`
 	}
 	file, err := os.Open("./files/chat/systemContent.json")
 	if err != nil {
@@ -272,19 +312,52 @@ func (srv *ChatService) spliceSystem() (string, error) {
 	if err != nil {
 		return "", errors.New(ecode.DataProcessingErr, err)
 	}
-	systemSetting := systemContent.SystemContent
+
+	systemSetting := systemContent.Initialization
 	systemSetting += systemContent.Setting
-	systemSetting += systemContent.RoleSetting
-	//systemSetting += systemContent.StatusBlockRule
 	systemSetting += systemContent.Repeat
+	systemSetting += systemContent.ConvenientFlirting
+	//角色设置
+	roleSetting := systemContent.RoleSetting
+	roleSetting = strings.Replace(roleSetting, "{{char_name}}", role.RoleName, -1)
+	roleSetting = strings.Replace(roleSetting, "{{char_desc}}", role.Desc, -1)
+	systemSetting += roleSetting
+
+	//游戏化设置（角色状态）
+	initialState := systemContent.InitialState
+	gamification := dto.GamificationObj{}
+	if chat.Id > 0 {
+		_ = json.Unmarshal([]byte(chat.Gamification), &gamification)
+	} else {
+		_ = json.Unmarshal([]byte(role.Gamification), &gamification)
+	}
+	initialState = strings.Replace(initialState, "{{affection}}", strconv.FormatInt(gamification.Affection, 10), -1)
+	initialState = strings.Replace(initialState, "{{sexuality}}", strconv.FormatInt(gamification.Sexuality, 10), -1)
+	systemSetting += initialState
+
+	systemSetting += systemContent.StatusBlockRule
+	systemSetting += systemContent.RepeatPro
 	systemSetting += systemContent.NSFW
 	systemSetting += systemContent.Request
 	systemSetting += systemContent.SecondPerson
 	systemSetting += systemContent.TimeFormat
 	systemSetting += systemContent.Psychology
-	systemSetting += systemContent.Style
-	systemSetting += systemContent.SummaryRules
+	//回复风格
+	switch chat.ReplyStyle {
+	case models.ReplyStyleLyrical:
+		systemSetting += systemContent.Style
+	case models.ReplyStyleFemaleNsfw:
+		systemSetting += systemContent.FeMaleStyle
+	case models.ReplyStyleMaleNsfw:
+		systemSetting += systemContent.MaleStyle
+	}
+
 	systemSetting += systemContent.Response
+	//字数规模
+	wordLimit := systemContent.WordLimit
+	wordLimit = strings.Replace(wordLimit, "{{word_count}}", strconv.FormatInt(chat.WordCount, 10), -1)
+	systemSetting += wordLimit
+
 	systemSetting += systemContent.Config
 	systemSetting += systemContent.Jailbreak
 
