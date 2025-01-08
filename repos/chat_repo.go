@@ -19,6 +19,9 @@ type IChatRepository interface {
 	AddChatShortTermMemory(chatId int64, histories []models.ChatHistory) error
 	GetChatShortTermMemory(chatId int64) ([]*models.ChatHistory, error)
 	DelChatShortTermMemory(chatId int64) error
+	AddChatHistory(chatId int64, histories []models.ChatHistory) error
+	GetChatHistory(chatId int64) ([]*models.ChatHistory, error)
+	DelChatHistory(chatId int64) error
 }
 type ChatRepository struct {
 	*mysql.Repository      `inject:""`
@@ -31,7 +34,7 @@ func (repo *ChatRepository) Provide(context.Context) any {
 
 var (
 	chatShortTermMemoryKey = "chat.shortTerm.memory.%d"
-	chatLongTermMemoryKey  = "chat.longTerm.memory.%d"
+	chatHistoryKey         = "chat.history.%d"
 )
 
 func (repo *ChatRepository) AddChatShortTermMemory(chatId int64, histories []models.ChatHistory) error {
@@ -114,6 +117,90 @@ func (repo *ChatRepository) GetChatShortTermMemory(chatId int64) ([]*models.Chat
 
 func (repo *ChatRepository) DelChatShortTermMemory(chatId int64) error {
 	key := fmt.Sprintf(chatShortTermMemoryKey, chatId)
+	err := repo.RDB.LTrim(key, 1, 0).Err()
+	return err
+}
+
+func (repo *ChatRepository) AddChatHistory(chatId int64, histories []models.ChatHistory) error {
+	key := fmt.Sprintf(chatHistoryKey, chatId)
+	historyCount := len(histories)
+	value := make([]interface{}, 0)
+	for _, history := range histories {
+		historyStr, err := json.Marshal(history)
+		if err != nil {
+			return err
+		}
+		value = append(value, string(historyStr))
+	}
+
+	llen, err := repo.RDB.LLen(key).Result()
+	if err != nil {
+		return err
+	}
+	if _, err = repo.RDB.Pipelined(func(pipe redis2.Pipeliner) error {
+		popCount := int(llen) - (20 - historyCount)
+		for i := 0; i < popCount; i++ {
+			if err = repo.RDB.LPop(key).Err(); err != nil {
+				return err
+			}
+		}
+		if err = repo.RDB.RPush(key, value...).Err(); err != nil {
+			return err
+		}
+		//添加过期时间
+		repo.RDB.Expire(key, time.Minute*60*24) //1天过期时间
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *ChatRepository) GetChatHistory(chatId int64) ([]*models.ChatHistory, error) {
+	var histories []*models.ChatHistory
+	key := fmt.Sprintf(chatHistoryKey, chatId)
+	res, err := repo.RDB.LRange(key, 0, -1).Result()
+	if err != nil || len(res) == 0 {
+		//查数据库
+		var newHistories []*models.ChatHistory //需要进行反转顺序的
+		err = repo.Find(&finder.Finder{
+			Model:          new(models.ChatHistory),
+			Wheres:         where.New().And(where.Eq("chat_id", chatId)),
+			Recipient:      &newHistories,
+			OrderBy:        "id desc",
+			Num:            1,
+			Size:           20, //缓存最新的20条消息
+			IgnoreNotFound: true,
+		})
+		//将记录添加回redis中
+		if err != nil {
+			return nil, err
+		}
+		historyCount := len(newHistories)
+		histories = make([]*models.ChatHistory, historyCount)
+		value := make([]interface{}, 0)
+		for k, v := range newHistories {
+			history, _ := json.Marshal(v)
+			value = append(value, string(history))
+			histories[historyCount-k-1] = v
+		}
+		repo.RDB.LPush(key, value...)
+		repo.RDB.Expire(key, time.Minute*60*24) //1天过期时间
+		return histories, err
+	}
+	for _, v := range res {
+		var history models.ChatHistory
+		err = json.Unmarshal([]byte(v), &history)
+		if err != nil {
+			continue
+		}
+		histories = append(histories, &history)
+	}
+	return histories, nil
+}
+
+func (repo *ChatRepository) DelChatHistory(chatId int64) error {
+	key := fmt.Sprintf(chatHistoryKey, chatId)
 	err := repo.RDB.LTrim(key, 1, 0).Err()
 	return err
 }

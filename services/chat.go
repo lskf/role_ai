@@ -180,20 +180,25 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 		if err != nil {
 			return errors.New(ecode.DatabaseErr, err)
 		}
-		//保存到缓存中
+		//更新短期记忆,更新缓存
 		err = srv.chatRepo.AddChatShortTermMemory(chat.Id, chatHistories)
+		_ = srv.chatRepo.AddChatHistory(chat.Id, chatHistories)
 		if err != nil {
-			//如果失败的话，删除缓存
+			//如果失败的话，删除短期记忆，删除缓存,
 			_ = srv.chatRepo.DelChatShortTermMemory(chat.Id)
+			_ = srv.chatRepo.DelChatHistory(chat.Id)
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	//更新短期记忆 todo
-	//更新长期记忆
-	return replyContent.Content, err
+	reply := dto.ChatHistory{}
+	err = models.Copy(&reply, &chatHistories[1])
+	if err != nil {
+		return nil, errors.New(ecode.DataProcessingErr, err)
+	}
+	return &reply, err
 }
 
 func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (any, error) {

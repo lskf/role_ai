@@ -9,9 +9,13 @@ type Chat struct {
 }
 
 type ChatHistory struct {
-	Id       int64  `json:"id"`
-	Question string `json:"question"`
-	Answer   string `json:"answer"`
+	Id        int64  `json:"id"`
+	ChatId    int64  `json:"chat_id"`
+	RoleType  int64  `json:"role_type"` //1:User, 2:Assistant
+	Type      int64  `json:"type"`      //对话内容
+	Content   string `json:"content"`   //内容
+	CreatedAt string `json:"-"`
+	UpdatedAt string `json:"-"`
 }
 
 type ChatReq struct {
