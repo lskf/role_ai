@@ -15,6 +15,7 @@ import (
 	"role_ai/infrastructure/llm"
 	"role_ai/models"
 	"role_ai/repos"
+	"strings"
 	"time"
 )
 
@@ -119,6 +120,7 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 		return nil, errors.New(ecode.InternalErr, errors.New(ecode.ClaudeGeneratedContentErr))
 	}
 	content := resp.Content[0].Text
+	content = strings.Replace(content, "{{char}}", role.RoleName, -1)
 	askContent := models.Reply{Content: para.Question}
 	askContentStr, _ := json.Marshal(askContent)
 	replyContent := models.Reply{}
