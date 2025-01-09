@@ -10,6 +10,7 @@ import (
 	"github.com/leor-w/kid/errors"
 	"io"
 	"os"
+	"role_ai/common"
 	"role_ai/dto"
 	"role_ai/infrastructure/ecode"
 	"role_ai/infrastructure/llm"
@@ -29,7 +30,7 @@ func (srv *ChatService) Provide(_ context.Context) any {
 	return srv
 }
 
-func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
+func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (*dto.ChatResp, error) {
 	var (
 		role                 models.Role
 		roleStyle            models.RoleStyle
@@ -105,7 +106,7 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 		return nil, err
 	}
 
-	//发送到llm
+	//发送到llm //失败重试 todo
 	claude := (&llm.Claude{}).NewClient()
 	messagePara := llm.MessageReq{
 		Model:         "claude-3-5-sonnet-latest",
@@ -207,36 +208,39 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	reply := make([]dto.ChatHistory, 2)
-	err = models.Copy(&reply, &chatHistories)
+	reply := dto.ChatResp{}
+	reply.ChatId = chat.Id
+	reply.Affection = replyContent.Affection
+	reply.Sexuality = replyContent.Sexuality
+	err = models.Copy(&reply.ChatHistoryList, &chatHistories)
 	if err != nil {
 		return nil, errors.New(ecode.DataProcessingErr, err)
 	}
-	reply[1].Affection = replyContent.Affection
-	reply[1].Sexuality = replyContent.Sexuality
 	return &reply, err
 }
 
-func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (any, error) {
+func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (*dto.ChatListResp, error) {
 	var (
-		chatList  []models.Chat
-		roleList  []models.Role
-		total     int64
-		listWhere where.Wheres
-		sort      string
-		roleIds   []int64
-		//res       dto.ChatListResp
+		chatList     []models.Chat
+		roleList     []models.Role
+		chatHistoryM map[int64][]*models.ChatHistory
+		total        int64
+		listWhere    where.Wheres
+		sort         string
+		roleIds      []int64
+		res          dto.ChatListResp
 	)
 
 	listWhere = listWhere.And(where.Eq("uid", uid))
-	//if para.Name != "" {
-	//	//获取角色id
-	//
-	//	listWhere = listWhere.And(where.Like("role_name", "%"+para.Name+"%"))
-	//}
-
+	if para.Name != "" {
+		//获取角色列表
+		roleList, _ = srv.roleRepo.GetRoleByRoleNameAndChatUid(uid, para.Name)
+		for _, role := range roleList {
+			roleIds = append(roleIds, role.Id)
+		}
+		listWhere = listWhere.And(where.In("role_id", roleIds))
+	}
 	sort += "id desc"
-
 	err := srv.chatRepo.Find(&finder.Finder{
 		Model:          models.Chat{},
 		Wheres:         listWhere,
@@ -250,24 +254,108 @@ func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (any, error) {
 	if err != nil {
 		return nil, errors.New(ecode.DatabaseErr, err)
 	}
-	//获取角色列表
+	roleIds = roleIds[:0]
+	chatHistoryM = make(map[int64][]*models.ChatHistory)
 	for _, v := range chatList {
 		roleIds = append(roleIds, v.RoleId)
+		//获取聊天记录
+		chatHistory, _ := srv.chatRepo.GetLatestChatHistory(v.Id)
+		chatHistoryM[v.Id] = chatHistory
 	}
-	err = srv.roleRepo.Find(&finder.Finder{
-		Model:     models.Role{},
-		Wheres:    where.New().And(where.In("id", roleIds)),
-		Recipient: &roleList,
-		Total:     &total,
-	})
-	if err != nil {
-		return nil, errors.New(ecode.DatabaseErr, err)
+	if para.Name == "" {
+		//获取角色列表
+		err = srv.roleRepo.Find(&finder.Finder{
+			Model:     models.Role{},
+			Wheres:    where.New().And(where.In("id", roleIds)),
+			Recipient: &roleList,
+		})
+		if err != nil {
+			return nil, errors.New(ecode.DatabaseErr, err)
+		}
 	}
 	roleM := make(map[int64]models.Role)
 	for _, v := range roleList {
 		roleM[v.Id] = v
 	}
-	return nil, nil
+	for _, v := range chatList {
+		chatObj := dto.Chat{}
+		chatObj.Id = v.Id
+		chatObj.CreatedAt = v.CreatedAt.Format(common.TimeFormatToDateTime)
+		chatObj.UpdatedAt = v.UpdatedAt.Format(common.TimeFormatToDateTime)
+		//角色信息
+		roleDetail := roleM[v.RoleId]
+		chatObj.RoleName = roleDetail.RoleName
+		chatObj.RoleAvatar = roleDetail.Avatar
+		//聊天记录
+		var history []*dto.ChatHistory
+		chatHistory := chatHistoryM[v.Id]
+		_ = models.Copy(&history, &chatHistory)
+		chatObj.Histories = history
+		res.List = append(res.List, chatObj)
+	}
+	res.Total = total
+	return &res, nil
+}
+
+func (srv *ChatService) GetHistoryList(uid int64, para dto.ChatHistoryListReq) (*dto.ChatHistoryListResp, error) {
+	var (
+		chat          models.Chat
+		chatHistories []models.ChatHistory
+		total         int64
+		res           dto.ChatHistoryListResp
+	)
+	//获取对话详情
+	err := srv.chatRepo.GetOne(&finder.Finder{
+		Model:     new(models.Chat),
+		Wheres:    where.New().And(where.Eq("id", para.ChatId), where.Eq("uid", uid)),
+		Recipient: &chat,
+	})
+	if err != nil {
+		return nil, errors.New(ecode.ChatNotFound, err)
+	}
+	//获取聊天记录
+	listWhere := where.New()
+	if para.Id > 0 {
+		listWhere = listWhere.And(where.Lt("id", para.Id))
+	}
+	err = srv.chatRepo.Find(&finder.Finder{
+		Model:          new(models.ChatHistory),
+		Wheres:         listWhere,
+		OrderBy:        "id desc",
+		Num:            para.PageNum,
+		Size:           para.PageSize,
+		Recipient:      &chatHistories,
+		Total:          &total,
+		IgnoreNotFound: true,
+	})
+	if err != nil {
+		return nil, errors.New(ecode.DatabaseErr, err)
+	}
+	err = models.Copy(&res.List, &chatHistories)
+	if err != nil {
+		return nil, errors.New(ecode.DataProcessingErr, err)
+	}
+	return &res, nil
+}
+
+func (srv *ChatService) DelChat(uid, chatId int64) error {
+	var chat models.Chat
+	//获取对话详情
+	err := srv.chatRepo.GetOne(&finder.Finder{
+		Model:     new(models.Chat),
+		Wheres:    where.New().And(where.Eq("id", chatId), where.Eq("uid", uid)),
+		Recipient: &chat,
+	})
+	if err != nil {
+		return errors.New(ecode.ChatNotFound, err)
+	}
+	err = srv.chatRepo.Transaction(func(ctx context.Context) error {
+		return nil
+	})
+	if err != nil {
+		return errors.New(ecode.DatabaseErr, err)
+	}
+	return nil
 }
 
 func (srv *ChatService) splicePrompt(input string) (string, error) {

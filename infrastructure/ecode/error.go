@@ -53,10 +53,11 @@ var (
 	TokenIsEmptyErr     = &errors.Status{Code: 40008, Message: "令牌为空"}
 	MenberPermissionErr = &errors.Status{Code: 40009, Message: "用户会员权限不足，请升级会员等级"}
 
-	//500xx 角色错误
+	//500xx 聊天错误
 	RoleNotExistErr = &errors.Status{Code: 50001, Message: "角色不存在"}
 	VoiceNotFound   = &errors.Status{Code: 50002, Message: "声音不存在"}
 	PublicChangeErr = &errors.Status{Code: 50003, Message: "公开角色不能改为私密"}
+	ChatNotFound    = &errors.Status{Code: 50004, Message: "对话不存在"}
 
 	//600xx llm错误
 	ClaudeGeneratedContentErr = &errors.Status{Code: 60001, Message: "claude生成内容失败"}

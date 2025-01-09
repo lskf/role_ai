@@ -11,7 +11,7 @@ import (
 
 // IdField id主键
 type IdField struct {
-	Id int64 `gorm:"column:id;type:int(11);primary_key;AUTO_INCREMENT;comment:id" json:"-"`
+	Id int64 `gorm:"column:id;type:int(11);primary_key;AUTO_INCREMENT;comment:id" json:"id"`
 }
 
 // UidField 用户id

@@ -38,7 +38,20 @@ func Chat(ctx *kid.Context) any {
 }
 
 func ChatList(ctx *kid.Context) any {
-	return nil
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var para dto.ChatListReq
+	if err = ctx.ShouldBindQuery(&para); err != nil {
+		return web.ParamsErr(err)
+	}
+	res, err := chatCtrl.srv.GetList(user.Uid, para)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(res)
 }
 
 func ChatDetail(ctx *kid.Context) any {
@@ -54,5 +67,18 @@ func DelChat(ctx *kid.Context) any {
 }
 
 func GetChatHistoryList(ctx *kid.Context) any {
-	return nil
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var para dto.ChatHistoryListReq
+	if err = ctx.ShouldBindQuery(&para); err != nil {
+		return web.ParamsErr(err)
+	}
+	res, err := chatCtrl.srv.GetHistoryList(user.Uid, para)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(res)
 }
