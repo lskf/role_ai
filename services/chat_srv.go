@@ -164,11 +164,11 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (any, error) {
 				return errors.New(ecode.DatabaseErr, err)
 			}
 		} else {
-			affection, _ := strconv.Atoi(replyContent.Affection)
-			sexuality, _ := strconv.Atoi(replyContent.Sexuality)
+			affection := replyContent.Affection
+			sexuality := replyContent.Sexuality
 			gamificationObj := dto.GamificationObj{
-				Affection: int64(affection),
-				Sexuality: int64(sexuality),
+				Affection: affection,
+				Sexuality: sexuality,
 			}
 			gamification, _ := json.Marshal(gamificationObj)
 			chat.Gamification = string(gamification)

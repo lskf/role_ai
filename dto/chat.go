@@ -14,8 +14,8 @@ type ChatHistory struct {
 	RoleType  int64  `json:"role_type"` //1:User, 2:Assistant
 	Type      int64  `json:"type"`      //对话内容
 	Content   string `json:"content"`   //内容
-	Affection string `json:"affection"`
-	Sexuality string `json:"sexuality"`
+	Affection int64  `json:"affection"`
+	Sexuality int64  `json:"sexuality"`
 	CreatedAt string `json:"-"`
 	UpdatedAt string `json:"-"`
 }

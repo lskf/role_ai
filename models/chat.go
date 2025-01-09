@@ -49,6 +49,6 @@ type Reply struct {
 	Locations string `json:"locations"`
 	Weather   string `json:"weather"`
 	Content   string `json:"content"`
-	Affection string `json:"affection"`
-	Sexuality string `json:"sexuality"`
+	Affection int64  `json:"affection"`
+	Sexuality int64  `json:"sexuality"`
 }
