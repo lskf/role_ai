@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"github.com/leor-w/kid/config"
 	"github.com/leor-w/kid/errors"
 	"github.com/leor-w/kid/plugin/smscode"
 	"role_ai/infrastructure/ecode"
@@ -30,6 +31,12 @@ func (srv *SmsService) Provide(_ context.Context) interface{} {
 func (srv *SmsService) SendCode(phone string) error {
 	code := tools.RandomInt64InRange(100000, 999999)
 	codeStr := strconv.FormatInt(code, 10)
+	runMode := config.GetString("app.runMode")
+	//todo del
+	if runMode != "release" {
+		codeStr = "888888"
+	}
+
 	//反正频繁操作
 	ok, err := srv.smsRepo.LockKey(phone, 1)
 	if err != nil {
