@@ -17,6 +17,7 @@ type Chat struct {
 	ReplyStyle   int64  `gorm:"column:reply_style;type:tinyint(4);comment:回复风格，1：lyrical，2：male nsfw，3：female nsfw ;NOT NULL" json:"reply_style"`
 	WordCount    int64  `gorm:"column:word_count;type:int(11);comment:字数规模;NOT NULL" json:"word_count"`
 	Gamification string `gorm:"column:gamification;type:text;comment:游戏化" json:"gamification"`
+	Ltm          string `gorm:"column:ltm;type:text;comment:长期记忆" json:"ltm"`
 	CreatedAtField
 	UpdatedAtField
 }
@@ -51,4 +52,9 @@ type Reply struct {
 	Content   string `json:"content"`
 	Affection int64  `json:"affection"`
 	Sexuality int64  `json:"sexuality"`
+}
+
+type LtmReply struct {
+	Content string `json:"content"`
+	Memory  string `json:"memory"`
 }

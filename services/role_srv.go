@@ -372,7 +372,7 @@ Response requirements:
 		return nil, errors.New(ecode.InternalErr, err)
 	}
 	if len(resq.Content) == 0 {
-		return nil, errors.New(ecode.InternalErr, errors.New(ecode.ClaudeGeneratedContentErr))
+		return nil, errors.New(ecode.InternalErr, errors.New(ecode.LlmGeneratedChatContentErr))
 	}
 	return &dto.GetRoleAvatarResq{ArtStyle: artStyle, Desc: resq.Content[0].Text}, nil
 }
@@ -468,7 +468,7 @@ Response requirements:
 		return nil, errors.New(ecode.InternalErr, err)
 	}
 	if len(resq.Content) == 0 {
-		return nil, errors.New(ecode.InternalErr, errors.New(ecode.ClaudeGeneratedContentErr))
+		return nil, errors.New(ecode.InternalErr, errors.New(ecode.LlmGeneratedChatContentErr))
 	}
 	createRoleReq := dto.CreateRoleReq{}
 	err = json.Unmarshal([]byte(resq.Content[0].Text), &createRoleReq)

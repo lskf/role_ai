@@ -58,7 +58,9 @@ var (
 	VoiceNotFound   = &errors.Status{Code: 50002, Message: "声音不存在"}
 	PublicChangeErr = &errors.Status{Code: 50003, Message: "公开角色不能改为私密"}
 	ChatNotFound    = &errors.Status{Code: 50004, Message: "对话不存在"}
+	LTMErr          = &errors.Status{Code: 50005, Message: "长期记忆错误"}
 
 	//600xx llm错误
-	ClaudeGeneratedContentErr = &errors.Status{Code: 60001, Message: "claude生成内容失败"}
+	LlmGeneratedChatContentErr = &errors.Status{Code: 60001, Message: "llm生成对话内容失败"}
+	LlmGeneratedLtmContentErr  = &errors.Status{Code: 60001, Message: "llm生成长期记忆内容失败"}
 )

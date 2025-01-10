@@ -18,6 +18,7 @@ import (
 	"role_ai/repos"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -38,8 +39,8 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (*dto.ChatResp, error)
 		chatHistories        []models.ChatHistory
 		chatShortTermHistory []*models.ChatHistory //短期记忆
 
-		chatRecords   []llm.MessageObj
-		systemSetting string
+		chatRecords                 []llm.MessageObj
+		systemSetting, newLtmMemory string
 	)
 	//获取角色详情
 	err := srv.roleRepo.GetOne(&finder.Finder{
@@ -100,14 +101,58 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (*dto.ChatResp, error)
 		}
 	}
 	chatRecords = append(chatRecords, llm.MessageObj{User: para.Question})
+
+	claude := (&llm.Claude{}).NewClient()
+
+	wg := sync.WaitGroup{}
+	errCh := make(chan error, 5)
+	defer close(errCh)
+	if chat.Id > 0 {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			//长期记忆
+			count, err := srv.chatRepo.GetReplyHistoryCount(chat.Id, models.ChatHistoryTypeChat, models.ChatHistoryRoleAssistant)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			if count%10 != 0 { //todo change
+				return
+			}
+			LtmSystemSetting, err := srv.spliceLtmSystem(&role, &chat)
+			//发送到llm 获取长期记忆
+			ltmRecords := make([]llm.MessageObj, 0)
+			ltmRecords = append(ltmRecords, chatRecords...)
+			ltmRecords[len(ltmRecords)-1].User = "你需要将上面的对话和已存在的记忆进行总结，然后返回新的记忆。新的记忆的文字大小需要在10W字以内，如果超出的话，你可以对部分记忆遗忘，遗忘规则是越久的越容易遗忘，越新发生的越难遗忘。\n你只需返回和已存在的记忆总结后的记忆内容，不需使用标签包裹"
+			ltmMessagePara := llm.MessageReq{
+				Model:         "claude-3-5-sonnet-latest",
+				MaxToken:      1024,
+				Messages:      ltmRecords,
+				SystemSetting: LtmSystemSetting,
+			}
+			respLtm, err := claude.Message(ltmMessagePara)
+			if err != nil {
+				errCh <- errors.New(ecode.InternalErr, errors.New(ecode.LlmGeneratedLtmContentErr, err))
+				return
+			}
+			if len(respLtm.Content) <= 0 {
+				errCh <- errors.New(ecode.InternalErr, errors.New(ecode.LlmGeneratedLtmContentErr))
+				return
+			}
+			newLtmMemory = respLtm.Content[0].Text
+			return
+		}(&wg)
+	}
 	//拼systemSetting
-	systemSetting, err = srv.spliceSystem(role, chat)
+	systemSetting, err = srv.spliceSystem(&role, &chat)
 	if err != nil {
 		return nil, err
 	}
 
 	//发送到llm //失败重试 todo
-	claude := (&llm.Claude{}).NewClient()
+	//拼接字符串，规定返回的格式 //todo
+	chatRecords[len(chatRecords)-1].User += "\n！！！返回的内容必须是json格式，字段是：{\"weekday\":\"\",\"time\":\"\",\"locations\":\"\",\"weather\":\"\",\"content\":\"\",\"affection\":0,\"sexuality\":0}\n\"weekday\":今天星期几；\"time\":现在的时间是什么；\"locations\":现在在什么地方；\"weather\":现在的天气；\"content\":发生什么事情；\"affection\":对{{User}}的好感度；\"sexuality\":对{{User}}的性欲值。!!!\n!!!\"content\"内的\"\"\" 和\"\\n\"需要转码！！！\n"
 	messagePara := llm.MessageReq{
 		Model:         "claude-3-5-sonnet-latest",
 		MaxToken:      1024,
@@ -116,10 +161,18 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (*dto.ChatResp, error)
 	}
 	resp, err := claude.Message(messagePara)
 	if err != nil {
-		return nil, errors.New(ecode.InternalErr, errors.New(ecode.ClaudeGeneratedContentErr, err))
+		errCh <- errors.New(ecode.InternalErr, errors.New(ecode.LlmGeneratedChatContentErr, err))
+	}
+	wg.Wait() //等待协程结束
+	if len(errCh) > 0 {
+		//如果长期记忆出问题的话，直接结束
+		err = <-errCh
+		if err != nil {
+			return nil, errors.New(ecode.InternalErr, errors.New(ecode.LTMErr, err))
+		}
 	}
 	if len(resp.Content) <= 0 {
-		return nil, errors.New(ecode.InternalErr, errors.New(ecode.ClaudeGeneratedContentErr))
+		return nil, errors.New(ecode.InternalErr, errors.New(ecode.LlmGeneratedChatContentErr))
 	}
 	content := resp.Content[0].Text
 	content = strings.Replace(content, "{{char}}", role.RoleName, -1)
@@ -173,14 +226,18 @@ func (srv *ChatService) Chat(uid int64, para dto.ChatReq) (*dto.ChatResp, error)
 			}
 			gamification, _ := json.Marshal(gamificationObj)
 			chat.Gamification = string(gamification)
+			//chat 需要修改的字段
+			chatUpdateFields := make(map[string]interface{})
+			if newLtmMemory != "" {
+				chatUpdateFields["ltm"] = newLtmMemory
+			}
+			chatUpdateFields["gamification"] = chat.Gamification
+			chatUpdateFields["updated_at"] = chat.UpdatedAt
 			err = srv.chatRepo.Update(&updater.Updater{
 				Tx:     ctx,
 				Model:  new(models.Chat),
 				Wheres: where.New().And(where.Eq("id", chat.Id)),
-				Fields: map[string]interface{}{
-					"gamification": chat.Gamification,
-					"updated_at":   chat.UpdatedAt,
-				},
+				Fields: chatUpdateFields,
 			})
 			if err != nil {
 				return errors.New(ecode.DatabaseErr, err)
@@ -284,6 +341,7 @@ func (srv *ChatService) GetList(uid int64, para dto.ChatListReq) (*dto.ChatListR
 		chatObj.UpdatedAt = v.UpdatedAt.Format(common.TimeFormatToDateTime)
 		//角色信息
 		roleDetail := roleM[v.RoleId]
+		chatObj.RoleId = roleDetail.Id
 		chatObj.RoleName = roleDetail.RoleName
 		chatObj.RoleAvatar = roleDetail.Avatar
 		//聊天记录
@@ -315,6 +373,7 @@ func (srv *ChatService) GetHistoryList(uid int64, para dto.ChatHistoryListReq) (
 	}
 	//获取聊天记录
 	listWhere := where.New()
+	listWhere = listWhere.And(where.Eq("chat_id", para.ChatId))
 	if para.Id > 0 {
 		listWhere = listWhere.And(where.Lt("id", para.Id))
 	}
@@ -362,7 +421,7 @@ func (srv *ChatService) splicePrompt(input string) (string, error) {
 	return input, nil
 }
 
-func (srv *ChatService) spliceSystem(role models.Role, chat models.Chat) (string, error) {
+func (srv *ChatService) spliceSystem(role *models.Role, chat *models.Chat) (string, error) {
 	type SystemContent struct {
 		Initialization     string `json:"initialization"`
 		Setting            string `json:"setting"`
@@ -375,6 +434,7 @@ func (srv *ChatService) spliceSystem(role models.Role, chat models.Chat) (string
 		NSFW               string `json:"NSFW"`
 		Request            string `json:"request"`
 		SecondPerson       string `json:"secondPerson"`
+		LTM                string `json:"LTM"`
 		TimeFormat         string `json:"timeFormat"`
 		Psychology         string `json:"psychology"`
 		Style              string `json:"style"`
@@ -428,6 +488,11 @@ func (srv *ChatService) spliceSystem(role models.Role, chat models.Chat) (string
 	systemSetting += systemContent.NSFW
 	systemSetting += systemContent.Request
 	systemSetting += systemContent.SecondPerson
+
+	ltm := systemContent.LTM
+	ltm = strings.Replace(systemSetting, "{{LTM_comtent}}", chat.Ltm, -1)
+	systemSetting += ltm
+
 	systemSetting += systemContent.TimeFormat
 	systemSetting += systemContent.Psychology
 	//回复风格
@@ -452,5 +517,24 @@ func (srv *ChatService) spliceSystem(role models.Role, chat models.Chat) (string
 	//返回格式
 	systemSetting += systemContent.ReplyFormat
 
+	return systemSetting, nil
+}
+
+func (srv *ChatService) spliceLtmSystem(role *models.Role, chat *models.Chat) (string, error) {
+	systemSetting := ""
+	file, err := os.Open("./files/chat/ltmSystemContent.txt")
+	if err != nil {
+		return "", errors.New(ecode.DataProcessingErr, err)
+	}
+	defer file.Close()
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", errors.New(ecode.DataProcessingErr, err)
+	}
+	systemSetting = string(data)
+	//替换长期记忆
+	systemSetting = strings.Replace(systemSetting, "{{ltmMemory}}", chat.Ltm, 1)
+	//替换角色名称
+	systemSetting = strings.Replace(systemSetting, "{{role_name}}", role.RoleName, -1)
 	return systemSetting, nil
 }

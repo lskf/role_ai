@@ -2,6 +2,7 @@ package dto
 
 type Chat struct {
 	Id         int64          `json:"id"`
+	RoleId     int64          `json:"role_id"`
 	RoleName   string         `json:"role_name"`
 	RoleAvatar string         `json:"role_avatar"`
 	CreatedAt  string         `json:"created_at"`

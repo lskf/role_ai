@@ -23,6 +23,7 @@ type IChatRepository interface {
 	GetChatHistory(chatId int64) ([]*models.ChatHistory, error)
 	GetLatestChatHistory(chatId int64) ([]*models.ChatHistory, error)
 	DelChatHistory(chatId int64) error
+	GetReplyHistoryCount(chatId, historyType, roleType int64) (count int64, err error)
 }
 type ChatRepository struct {
 	*mysql.Repository      `inject:""`
@@ -246,4 +247,11 @@ func (repo *ChatRepository) DelChatHistory(chatId int64) error {
 	key := fmt.Sprintf(chatHistoryKey, chatId)
 	err := repo.RDB.Del(key).Err()
 	return err
+}
+
+func (repo *ChatRepository) GetReplyHistoryCount(chatId, historyType, roleType int64) (count int64, err error) {
+	db := repo.DB.Model(new(models.ChatHistory))
+	db = db.Where("chat_id = ? AND type = ? AND role_type = ? ", chatId, historyType, roleType)
+	err = db.Count(&count).Error
+	return count, err
 }
