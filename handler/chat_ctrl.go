@@ -82,3 +82,20 @@ func GetChatHistoryList(ctx *kid.Context) any {
 	}
 	return web.Success(res)
 }
+
+func Tts(ctx *kid.Context) any {
+	user := models.User{}
+	err := ctx.GetBindUser(&user)
+	if err != nil {
+		return web.Unauthorized(err)
+	}
+	var para dto.ChatTtsReq
+	if err = ctx.Valid(&para); err != nil {
+		return web.ParamsErr(err)
+	}
+	res, err := chatCtrl.srv.Tts(&para)
+	if err != nil {
+		return web.Error(err)
+	}
+	return web.Success(res)
+}

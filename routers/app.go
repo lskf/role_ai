@@ -57,6 +57,7 @@ func InitAppRouter(group *kid.RouterGroup) {
 			chat.POST("", handler.Chat)
 			chat.GET("/list", handler.ChatList)
 			chat.GET("/history/list", handler.GetChatHistoryList)
+			chat.POST("/tts", handler.Tts)
 		}
 	}
 

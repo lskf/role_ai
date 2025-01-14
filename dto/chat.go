@@ -53,3 +53,7 @@ type ChatHistoryListResp struct {
 	List  []ChatHistory `json:"list"`
 	Total int64         `json:"total"`
 }
+
+type ChatTtsReq struct {
+	Content string `json:"content" validate:"required"`
+}

@@ -417,6 +417,21 @@ func (srv *ChatService) DelChat(uid, chatId int64) error {
 	return nil
 }
 
+func (srv ChatService) Tts(para *dto.ChatTtsReq) (any, error) {
+	tts := (&llm.GptSoVITS{}).NewGptSoVITS()
+	req := llm.GptSovitsTtsParam{
+		Text:         para.Content,
+		TextLang:     "zh",
+		RefAudioPath: "GPT_SoVITS/pretrained_models/kklt/kklt_cn.wav",
+		PromptLang:   "zh",
+	}
+	resp, err := tts.Tts(req)
+	if err != nil {
+		return nil, errors.New(ecode.LlmTTSErr, err)
+	}
+	return resp, err
+}
+
 func (srv *ChatService) splicePrompt(input string) (string, error) {
 	return input, nil
 }

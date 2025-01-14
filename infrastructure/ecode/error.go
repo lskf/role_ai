@@ -62,5 +62,6 @@ var (
 
 	//600xx llm错误
 	LlmGeneratedChatContentErr = &errors.Status{Code: 60001, Message: "llm生成对话内容失败"}
-	LlmGeneratedLtmContentErr  = &errors.Status{Code: 60001, Message: "llm生成长期记忆内容失败"}
+	LlmGeneratedLtmContentErr  = &errors.Status{Code: 60002, Message: "llm生成长期记忆内容失败"}
+	LlmTTSErr                  = &errors.Status{Code: 60003, Message: "llmTTS失败"}
 )
