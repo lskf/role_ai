@@ -44,7 +44,8 @@ type ChatListResp struct {
 }
 
 type ChatHistoryListReq struct {
-	ChatId int64 `json:"chat_id" form:"chat_id" binding:"required"`
+	RoleId int64 `json:"role_id" form:"role_id"`
+	ChatId int64 `json:"chat_id" form:"chat_id"`
 	Id     int64 `json:"id" form:"id"`
 	PageField
 }

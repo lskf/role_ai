@@ -76,6 +76,9 @@ func GetChatHistoryList(ctx *kid.Context) any {
 	if err = ctx.ShouldBindQuery(&para); err != nil {
 		return web.ParamsErr(err)
 	}
+	if para.ChatId == 0 && para.RoleId == 0 {
+		return web.ParamsErr()
+	}
 	res, err := chatCtrl.srv.GetHistoryList(user.Uid, para)
 	if err != nil {
 		return web.Error(err)

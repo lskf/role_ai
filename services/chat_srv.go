@@ -363,17 +363,26 @@ func (srv *ChatService) GetHistoryList(uid int64, para dto.ChatHistoryListReq) (
 		res           dto.ChatHistoryListResp
 	)
 	//获取对话详情
+	wheres := where.New()
+	if para.ChatId > 0 {
+		wheres = wheres.And(where.Eq("id", para.ChatId))
+	}
+	if para.RoleId > 0 {
+		wheres = wheres.And(where.Eq("role_id", para.RoleId))
+	}
+	wheres = wheres.And(where.Eq("uid", uid))
 	err := srv.chatRepo.GetOne(&finder.Finder{
-		Model:     new(models.Chat),
-		Wheres:    where.New().And(where.Eq("id", para.ChatId), where.Eq("uid", uid)),
-		Recipient: &chat,
+		Model:          new(models.Chat),
+		Wheres:         wheres,
+		Recipient:      &chat,
+		IgnoreNotFound: true,
 	})
 	if err != nil {
 		return nil, errors.New(ecode.ChatNotFound, err)
 	}
 	//获取聊天记录
 	listWhere := where.New()
-	listWhere = listWhere.And(where.Eq("chat_id", para.ChatId))
+	listWhere = listWhere.And(where.Eq("chat_id", chat.Id))
 	if para.Id > 0 {
 		listWhere = listWhere.And(where.Lt("id", para.Id))
 	}
